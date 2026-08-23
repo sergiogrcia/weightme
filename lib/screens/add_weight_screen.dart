@@ -283,17 +283,21 @@ class _NotesInput extends StatelessWidget {
             child: Text('NOTA OPCIONAL', style: AppTypography.labelCaps.copyWith(color: AppColors.primary)),
           ),
           const SizedBox(height: AppSpacing.xs),
-          TextField(
-            controller: controller,
-            minLines: 3,
-            maxLines: 3,
-            style: AppTypography.bodySmall.copyWith(color: AppColors.textPrimary),
-            decoration: InputDecoration(
-              filled: false,
-              border: InputBorder.none,
-              hintText: 'Ej. En vacaciones, después de entrenar...',
-              hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary.withValues(alpha: .55)),
-              contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          SizedBox(
+            height: 60,
+            child: TextField(
+              controller: controller,
+              expands: true,
+              maxLines: null,
+              textAlignVertical: TextAlignVertical.center,
+              style: AppTypography.bodySmall.copyWith(color: AppColors.textPrimary),
+              decoration: InputDecoration(
+                filled: false,
+                border: InputBorder.none,
+                hintText: 'Ej. En vacaciones, después de entrenar...',
+                hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary.withValues(alpha: .55)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+              ),
             ),
           ),
         ],
