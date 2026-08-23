@@ -207,7 +207,7 @@ class _WeightInput extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                child: Text('kg', style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary)),
+                child: Text(' kg', style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary)),
               ),
             ],
           ),
