@@ -18,10 +18,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: LayoutBuilder(
+    return SafeArea(
+      bottom: false,
+      child: LayoutBuilder(
           builder: (context, constraints) {
             final isDesktop = constraints.maxWidth >= 760;
             return Column(
@@ -33,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       isDesktop ? AppSpacing.desktopMargin : AppSpacing.mobileMargin,
                       AppSpacing.md,
                       isDesktop ? AppSpacing.desktopMargin : AppSpacing.mobileMargin,
-                      isDesktop ? AppSpacing.lg : 116,
+                      AppSpacing.lg,
                     ),
                     child: Center(
                       child: ConstrainedBox(
@@ -84,9 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             );
           },
-        ),
       ),
-      bottomNavigationBar: const _BottomNavigation(),
     );
   }
 }
@@ -399,62 +396,6 @@ class _LogWeightButton extends StatelessWidget {
         icon: const Icon(Icons.add),
         label: const Text('Registrar peso'),
         style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-      ),
-    );
-  }
-}
-
-class _BottomNavigation extends StatelessWidget {
-  const _BottomNavigation();
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth >= 760) return const SizedBox.shrink();
-        return SafeArea(
-          top: false,
-          child: Container(
-            height: 72,
-            decoration: const BoxDecoration(
-              color: AppColors.surface,
-              border: Border(top: BorderSide(color: AppColors.outlineVariant)),
-              borderRadius: BorderRadius.vertical(top: AppRadius.large),
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _NavigationIcon(icon: Icons.dashboard_rounded, selected: true),
-                _NavigationIcon(icon: Icons.history_rounded),
-                _NavigationIcon(icon: Icons.add_circle_outline_rounded),
-                _NavigationIcon(icon: Icons.person_outline_rounded),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _NavigationIcon extends StatelessWidget {
-  const _NavigationIcon({required this.icon, this.selected = false});
-
-  final IconData icon;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: selected ? AppColors.primaryContainer : Colors.transparent,
-        borderRadius: AppRadius.pill,
-      ),
-      child: Icon(
-        icon,
-        color: selected ? const Color(0xFF0D0096) : AppColors.textSecondary,
       ),
     );
   }

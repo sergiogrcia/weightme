@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'screens/home_screen.dart';
+import 'screens/app_shell.dart';
 import 'theme/app_theme.dart';
 
 class WeightMeApp extends StatelessWidget {
@@ -12,7 +12,7 @@ class WeightMeApp extends StatelessWidget {
       title: 'WeightMe',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
-      home: const HomeScreen(),
+      home: const AppShell(),
     );
   }
 }
