@@ -27,14 +27,21 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _currentIndex == 2
-          ? AddWeightScreen(onCancel: () => _selectDestination(0))
-          : HomeScreen(onAddWeight: () => _selectDestination(2)),
-      bottomNavigationBar: AppBottomNavigation(
-        currentIndex: _currentIndex,
-        onDestinationSelected: _selectDestination,
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 760;
+        return Scaffold(
+          body: _currentIndex == 2
+              ? AddWeightScreen(onCancel: () => _selectDestination(0))
+              : HomeScreen(onAddWeight: () => _selectDestination(2)),
+          bottomNavigationBar: isMobile
+              ? AppBottomNavigation(
+                  currentIndex: _currentIndex,
+                  onDestinationSelected: _selectDestination,
+                )
+              : null,
+        );
+      },
     );
   }
 }

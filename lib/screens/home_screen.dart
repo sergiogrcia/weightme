@@ -158,21 +158,33 @@ class _ChartCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text('Evolución del peso', style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary)),
-              const Spacer(),
-              for (final period in ['1S', '1M', '3M'])
-                Padding(
-                  padding: const EdgeInsets.only(left: AppSpacing.xxs),
+              Expanded(
+                child: Text(
+                  'Evolución del peso',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const Expanded(child: WeightEvolutionChart()),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              for (final period in ['1S', '1M', '3M']) ...[
+                Expanded(
                   child: _PeriodButton(
                     label: period,
                     selected: period == selectedPeriod,
                     onPressed: () => onPeriodChanged(period),
                   ),
                 ),
+                if (period != '3M') const SizedBox(width: AppSpacing.xxs),
+              ],
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
-          const Expanded(child: WeightEvolutionChart()),
         ],
       ),
     );
@@ -195,9 +207,10 @@ class _PeriodButton extends StatelessWidget {
         onTap: onPressed,
         borderRadius: AppRadius.pill,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Text(
             label,
+            textAlign: TextAlign.center,
             style: AppTypography.labelCaps.copyWith(
               color: selected ? const Color(0xFF1000A9) : AppColors.textSecondary,
             ),
@@ -312,7 +325,7 @@ class _TotalLostCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Total perdido', style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary)),
-          const Spacer(),
+          const SizedBox(height: AppSpacing.lg),
           RichText(
             text: TextSpan(
               children: [
@@ -351,7 +364,7 @@ class _GoalCard extends StatelessWidget {
               _GoalPill(),
             ],
           ),
-          const Spacer(),
+          const SizedBox(height: AppSpacing.lg),
           ClipRRect(
             borderRadius: AppRadius.pill,
             child: const LinearProgressIndicator(

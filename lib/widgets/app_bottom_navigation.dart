@@ -15,51 +15,45 @@ class AppBottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth >= 760) return const SizedBox.shrink();
-
-        return SafeArea(
-          top: false,
-          child: Container(
-            height: 72,
-            decoration: const BoxDecoration(
-              color: AppColors.surface,
-              border: Border(top: BorderSide(color: AppColors.outlineVariant)),
-              borderRadius: BorderRadius.vertical(top: AppRadius.large),
+    return SafeArea(
+      top: false,
+      child: Container(
+        height: 72,
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          border: Border(top: BorderSide(color: AppColors.outlineVariant)),
+          borderRadius: BorderRadius.vertical(top: AppRadius.large),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _NavigationIcon(
+              icon: Icons.dashboard_rounded,
+              label: 'Inicio',
+              selected: currentIndex == 0,
+              onPressed: () => onDestinationSelected(0),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _NavigationIcon(
-                  icon: Icons.dashboard_rounded,
-                  label: 'Inicio',
-                  selected: currentIndex == 0,
-                  onPressed: () => onDestinationSelected(0),
-                ),
-                _NavigationIcon(
-                  icon: Icons.history_rounded,
-                  label: 'Historial',
-                  selected: currentIndex == 1,
-                  onPressed: () => onDestinationSelected(1),
-                ),
-                _NavigationIcon(
-                  icon: Icons.add_circle_outline_rounded,
-                  label: 'Añadir',
-                  selected: currentIndex == 2,
-                  onPressed: () => onDestinationSelected(2),
-                ),
-                _NavigationIcon(
-                  icon: Icons.person_outline_rounded,
-                  label: 'Perfil',
-                  selected: currentIndex == 3,
-                  onPressed: () => onDestinationSelected(3),
-                ),
-              ],
+            _NavigationIcon(
+              icon: Icons.history_rounded,
+              label: 'Historial',
+              selected: currentIndex == 1,
+              onPressed: () => onDestinationSelected(1),
             ),
-          ),
-        );
-      },
+            _NavigationIcon(
+              icon: Icons.add_circle_outline_rounded,
+              label: 'Añadir',
+              selected: currentIndex == 2,
+              onPressed: () => onDestinationSelected(2),
+            ),
+            _NavigationIcon(
+              icon: Icons.person_outline_rounded,
+              label: 'Perfil',
+              selected: currentIndex == 3,
+              onPressed: () => onDestinationSelected(3),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
