@@ -28,7 +28,7 @@ class AppBottomNavigation extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _NavigationIcon(
-              icon: Icons.dashboard_rounded,
+              icon: Icons.home_rounded,
               label: 'Inicio',
               selected: currentIndex == 0,
               onPressed: () => onDestinationSelected(0),
