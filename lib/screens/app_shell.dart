@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/app_bottom_navigation.dart';
+import 'add_weight_screen.dart';
 import 'home_screen.dart';
 
 class AppShell extends StatefulWidget {
@@ -14,7 +15,7 @@ class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
 
   void _selectDestination(int index) {
-    if (index == 0) {
+    if (index == 0 || index == 2) {
       setState(() => _currentIndex = index);
       return;
     }
@@ -27,7 +28,9 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: const HomeScreen(),
+      body: _currentIndex == 2
+          ? AddWeightScreen(onCancel: () => _selectDestination(0))
+          : HomeScreen(onAddWeight: () => _selectDestination(2)),
       bottomNavigationBar: AppBottomNavigation(
         currentIndex: _currentIndex,
         onDestinationSelected: _selectDestination,

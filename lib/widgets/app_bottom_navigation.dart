@@ -33,21 +33,25 @@ class AppBottomNavigation extends StatelessWidget {
               children: [
                 _NavigationIcon(
                   icon: Icons.dashboard_rounded,
+                  label: 'Inicio',
                   selected: currentIndex == 0,
                   onPressed: () => onDestinationSelected(0),
                 ),
                 _NavigationIcon(
                   icon: Icons.history_rounded,
+                  label: 'Historial',
                   selected: currentIndex == 1,
                   onPressed: () => onDestinationSelected(1),
                 ),
                 _NavigationIcon(
                   icon: Icons.add_circle_outline_rounded,
+                  label: 'Añadir',
                   selected: currentIndex == 2,
                   onPressed: () => onDestinationSelected(2),
                 ),
                 _NavigationIcon(
                   icon: Icons.person_outline_rounded,
+                  label: 'Perfil',
                   selected: currentIndex == 3,
                   onPressed: () => onDestinationSelected(3),
                 ),
@@ -63,26 +67,45 @@ class AppBottomNavigation extends StatelessWidget {
 class _NavigationIcon extends StatelessWidget {
   const _NavigationIcon({
     required this.icon,
+    required this.label,
     required this.selected,
     required this.onPressed,
   });
 
   final IconData icon;
+  final String label;
   final bool selected;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
+    return TextButton(
       onPressed: onPressed,
-      style: IconButton.styleFrom(
-        backgroundColor: selected ? AppColors.primaryContainer : Colors.transparent,
-        fixedSize: const Size(48, 48),
-        shape: const RoundedRectangleBorder(borderRadius: AppRadius.pill),
+      style: TextButton.styleFrom(
+        foregroundColor: selected ? AppColors.primary : AppColors.textSecondary,
+        fixedSize: const Size(72, 56),
+        padding: EdgeInsets.zero,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(AppRadius.medium),
+        ),
       ),
-      icon: Icon(
-        icon,
-        color: selected ? const Color(0xFF0D0096) : AppColors.textSecondary,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+            decoration: BoxDecoration(
+              color: selected ? AppColors.primary.withValues(alpha: .15) : Colors.transparent,
+              borderRadius: AppRadius.pill,
+            ),
+            child: Icon(icon, size: 21),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(fontSize: 10, fontWeight: selected ? FontWeight.w600 : FontWeight.w400),
+          ),
+        ],
       ),
     );
   }

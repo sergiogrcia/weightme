@@ -7,7 +7,9 @@ import '../theme/app_typography.dart';
 import '../widgets/weight_evolution_chart.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({required this.onAddWeight, super.key});
+
+  final VoidCallback onAddWeight;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -63,15 +65,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             if (isDesktop)
                               _DesktopStats()
                             else
-                              const Column(
+                              Column(
                                 children: [
-                                  _CurrentWeightCard(),
-                                  SizedBox(height: AppSpacing.md),
-                                  _TotalLostCard(),
-                                  SizedBox(height: AppSpacing.md),
-                                  _GoalCard(),
-                                  SizedBox(height: AppSpacing.md),
-                                  _LogWeightButton(),
+                                  const _CurrentWeightCard(),
+                                  const SizedBox(height: AppSpacing.md),
+                                  const _TotalLostCard(),
+                                  const SizedBox(height: AppSpacing.md),
+                                  const _GoalCard(),
+                                  const SizedBox(height: AppSpacing.md),
+                                  _LogWeightButton(onPressed: widget.onAddWeight),
                                 ],
                               ),
                           ],
@@ -385,14 +387,16 @@ class _GoalPill extends StatelessWidget {
 }
 
 class _LogWeightButton extends StatelessWidget {
-  const _LogWeightButton();
+  const _LogWeightButton({required this.onPressed});
+
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
       child: FilledButton.icon(
-        onPressed: () {},
+        onPressed: onPressed,
         icon: const Icon(Icons.add),
         label: const Text('Registrar peso'),
         style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
