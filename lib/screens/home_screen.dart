@@ -1,0 +1,486 @@
+import 'package:flutter/material.dart';
+
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
+import '../widgets/weight_evolution_chart.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String _selectedPeriod = '1M';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        bottom: false,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isDesktop = constraints.maxWidth >= 760;
+            return Column(
+              children: [
+                _TopBar(isDesktop: isDesktop),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(
+                      isDesktop ? AppSpacing.desktopMargin : AppSpacing.mobileMargin,
+                      AppSpacing.md,
+                      isDesktop ? AppSpacing.desktopMargin : AppSpacing.mobileMargin,
+                      isDesktop ? AppSpacing.lg : 116,
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1200),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Resumen',
+                              style: (isDesktop
+                                      ? AppTypography.headlineLarge
+                                      : AppTypography.headlineLarge.copyWith(fontSize: 28))
+                                  .copyWith(height: 36 / 28),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            const Text(
+                              'Tu progreso de un vistazo.',
+                              style: AppTypography.bodyLarge,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            _ChartCard(
+                              selectedPeriod: _selectedPeriod,
+                              onPeriodChanged: (period) {
+                                setState(() => _selectedPeriod = period);
+                              },
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            if (isDesktop)
+                              _DesktopStats()
+                            else
+                              const Column(
+                                children: [
+                                  _CurrentWeightCard(),
+                                  SizedBox(height: AppSpacing.md),
+                                  _TotalLostCard(),
+                                  SizedBox(height: AppSpacing.md),
+                                  _GoalCard(),
+                                  SizedBox(height: AppSpacing.md),
+                                  _LogWeightButton(),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+      bottomNavigationBar: const _BottomNavigation(),
+    );
+  }
+}
+
+class _TopBar extends StatelessWidget {
+  const _TopBar({required this.isDesktop});
+
+  final bool isDesktop;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 64,
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? AppSpacing.desktopMargin : AppSpacing.mobileMargin,
+      ),
+      color: AppColors.background.withValues(alpha: .9),
+      child: Row(
+        children: [
+          const Icon(Icons.insights_outlined, color: AppColors.primary),
+          const SizedBox(width: AppSpacing.sm),
+          const Icon(Icons.show_chart_rounded, color: AppColors.primary),
+          if (isDesktop) ...[
+            const SizedBox(width: AppSpacing.xs),
+            Text('WeightMe', style: AppTypography.titleMedium),
+            const Spacer(),
+            const _DesktopNavItem('RESUMEN', active: true),
+            const _DesktopNavItem('HISTORIAL'),
+            const _DesktopNavItem('PERFIL'),
+          ] else
+            const Spacer(),
+          if (!isDesktop) const Icon(Icons.menu, color: AppColors.textPrimary),
+        ],
+      ),
+    );
+  }
+}
+
+class _DesktopNavItem extends StatelessWidget {
+  const _DesktopNavItem(this.label, {this.active = false});
+
+  final String label;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: AppSpacing.md),
+      child: Text(
+        label,
+        style: AppTypography.labelCaps.copyWith(
+          color: active ? AppColors.primary : AppColors.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
+class _ChartCard extends StatelessWidget {
+  const _ChartCard({required this.selectedPeriod, required this.onPeriodChanged});
+
+  final String selectedPeriod;
+  final ValueChanged<String> onPeriodChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return _SurfaceCard(
+      height: 350,
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Text('Evolución del peso', style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary)),
+              const Spacer(),
+              for (final period in ['1S', '1M', '3M'])
+                Padding(
+                  padding: const EdgeInsets.only(left: AppSpacing.xxs),
+                  child: _PeriodButton(
+                    label: period,
+                    selected: period == selectedPeriod,
+                    onPressed: () => onPeriodChanged(period),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const Expanded(child: WeightEvolutionChart()),
+        ],
+      ),
+    );
+  }
+}
+
+class _PeriodButton extends StatelessWidget {
+  const _PeriodButton({required this.label, required this.selected, required this.onPressed});
+
+  final String label;
+  final bool selected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? AppColors.primary : AppColors.surfaceHighest,
+      borderRadius: AppRadius.pill,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: AppRadius.pill,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Text(
+            label,
+            style: AppTypography.labelCaps.copyWith(
+              color: selected ? const Color(0xFF1000A9) : AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DesktopStats extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      height: 300,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(flex: 2, child: _CurrentWeightCard()),
+          SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(child: _TotalLostCard()),
+                SizedBox(height: AppSpacing.md),
+                Expanded(child: _GoalCard()),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CurrentWeightCard extends StatelessWidget {
+  const _CurrentWeightCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return _SurfaceCard(
+      height: 300,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text('Peso actual', style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary)),
+              const Spacer(),
+              const Icon(Icons.trending_down, color: AppColors.secondary),
+            ],
+          ),
+          const Spacer(),
+          Center(
+            child: RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(style: AppTypography.displayLarge.copyWith(fontSize: 72, height: 1), text: '75.4'),
+                  TextSpan(style: AppTypography.headlineLarge.copyWith(color: AppColors.textSecondary), text: ' kg'),
+                ],
+              ),
+            ),
+          ),
+          const Spacer(),
+          const Divider(color: AppColors.outlineVariant),
+          const SizedBox(height: AppSpacing.xs),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _Metric(label: 'ESTA SEMANA', value: '-0.8 kg', highlight: true),
+              _Metric(label: 'ÚLTIMO REGISTRO', value: 'Hoy'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Metric extends StatelessWidget {
+  const _Metric({required this.label, required this.value, this.highlight = false});
+
+  final String label;
+  final String value;
+  final bool highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: AppTypography.labelCaps),
+        const SizedBox(height: AppSpacing.xxs),
+        Text(
+          value,
+          style: AppTypography.bodySmall.copyWith(
+            color: highlight ? AppColors.secondary : AppColors.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TotalLostCard extends StatelessWidget {
+  const _TotalLostCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return _SurfaceCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Total perdido', style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary)),
+          const Spacer(),
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(style: AppTypography.displayLarge.copyWith(color: AppColors.secondary), text: '12.6'),
+                TextSpan(style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary), text: ' kg'),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              const Icon(Icons.celebration_outlined, color: AppColors.secondary, size: 16),
+              const SizedBox(width: AppSpacing.xs),
+              Text('Desde el 1 de enero', style: AppTypography.bodySmall),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GoalCard extends StatelessWidget {
+  const _GoalCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return _SurfaceCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text('Siguiente objetivo', style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary)),
+              const Spacer(),
+              _GoalPill(),
+            ],
+          ),
+          const Spacer(),
+          ClipRRect(
+            borderRadius: AppRadius.pill,
+            child: const LinearProgressIndicator(
+              value: .65,
+              minHeight: 12,
+              backgroundColor: AppColors.surfaceHighest,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('3.4 kg restantes', style: AppTypography.labelCaps),
+              Text('65%', style: AppTypography.labelCaps),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GoalPill extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.xxs),
+      decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: .12), borderRadius: AppRadius.pill),
+      child: Text('72.0 kg', style: AppTypography.labelCaps.copyWith(color: AppColors.primary)),
+    );
+  }
+}
+
+class _LogWeightButton extends StatelessWidget {
+  const _LogWeightButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton.icon(
+        onPressed: () {},
+        icon: const Icon(Icons.add),
+        label: const Text('Registrar peso'),
+        style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+      ),
+    );
+  }
+}
+
+class _BottomNavigation extends StatelessWidget {
+  const _BottomNavigation();
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth >= 760) return const SizedBox.shrink();
+        return SafeArea(
+          top: false,
+          child: Container(
+            height: 72,
+            decoration: const BoxDecoration(
+              color: AppColors.surface,
+              border: Border(top: BorderSide(color: AppColors.outlineVariant)),
+              borderRadius: BorderRadius.vertical(top: AppRadius.large),
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _NavigationIcon(icon: Icons.dashboard_rounded, selected: true),
+                _NavigationIcon(icon: Icons.history_rounded),
+                _NavigationIcon(icon: Icons.add_circle_outline_rounded),
+                _NavigationIcon(icon: Icons.person_outline_rounded),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _NavigationIcon extends StatelessWidget {
+  const _NavigationIcon({required this.icon, this.selected = false});
+
+  final IconData icon;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: selected ? AppColors.primaryContainer : Colors.transparent,
+        borderRadius: AppRadius.pill,
+      ),
+      child: Icon(
+        icon,
+        color: selected ? const Color(0xFF0D0096) : AppColors.textSecondary,
+      ),
+    );
+  }
+}
+
+class _SurfaceCard extends StatelessWidget {
+  const _SurfaceCard({required this.child, this.height});
+
+  final Widget child;
+  final double? height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceHigh,
+        border: Border.all(color: AppColors.surfaceHighest),
+        borderRadius: AppRadius.card,
+        boxShadow: [
+          BoxShadow(color: AppColors.primary.withValues(alpha: .08), blurRadius: 40),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
