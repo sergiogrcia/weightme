@@ -173,7 +173,7 @@ class _ChartCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
-              for (final period in ['1S', '1M', '3M']) ...[
+              for (final period in ['1S', '1M', '3M', '6M']) ...[
                 Expanded(
                   child: _PeriodButton(
                     label: period,
@@ -181,7 +181,7 @@ class _ChartCard extends StatelessWidget {
                     onPressed: () => onPeriodChanged(period),
                   ),
                 ),
-                if (period != '3M') const SizedBox(width: AppSpacing.xxs),
+                if (period != '6M') const SizedBox(width: AppSpacing.xxs),
               ],
             ],
           ),
