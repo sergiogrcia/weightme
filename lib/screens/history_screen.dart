@@ -1,46 +1,57 @@
 import 'package:flutter/material.dart';
 
-import '../models/weight_entry.dart';
+import '../services/weight_service.dart';
+import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/month_group.dart';
 
 class HistoryScreen extends StatelessWidget {
-  const HistoryScreen({super.key});
+  const HistoryScreen({required this.weightService, super.key});
 
-  // TODO: reemplazar por datos reales cuando exista el backend/service.
-  static const _mockData = [
-    MonthEntries(
-      month: 'Octubre 2023',
-      entries: [
-        WeightEntry(day: 28, weightKg: 79.1, time: '08:30 AM', delta: -0.5),
-        WeightEntry(day: 21, weightKg: 79.4, time: '09:15 AM', delta: 1.2),
-        WeightEntry(day: 14, weightKg: 78.8, time: '07:45 AM', delta: -0.8),
-      ],
-    ),
-    MonthEntries(
-      month: 'Septiembre 2023',
-      entries: [
-        WeightEntry(day: 30, weightKg: 79.2, time: '08:00 AM', delta: 0),
-        WeightEntry(day: 15, weightKg: 79.2, time: '09:30 AM', delta: -1.4),
-      ],
-    ),
-  ];
+  final WeightService weightService;
 
   @override
   Widget build(BuildContext context) {
+    final history = weightService.historyByMonth;
+
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.mobileMargin, vertical: AppSpacing.md),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.mobileMargin,
+          vertical: AppSpacing.md,
+        ),
         children: [
-          Text('Historial', style: AppTypography.headlineLarge),
+          const Text('Historial', style: AppTypography.headlineLarge),
           const SizedBox(height: AppSpacing.xxs),
-          Text('Revisá tus registros anteriores.', style: AppTypography.bodySmall),
+          const Text('Revisa tus registros anteriores.', style: AppTypography.bodySmall),
           const SizedBox(height: AppSpacing.md),
-          for (final month in _mockData) ...[
-            MonthGroup(data: month),
-            const SizedBox(height: AppSpacing.md),
-          ],
+          if (history.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              alignment: Alignment.center,
+              child: Column(
+                children: [
+                  const Icon(Icons.history_outlined, size: 48, color: AppColors.textSecondary),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'No hay registros aún',
+                    style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: AppSpacing.xxs),
+                  const Text(
+                    'Registra tu peso para ver tu historial aquí.',
+                    style: AppTypography.bodySmall,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            )
+          else
+            for (final month in history) ...[
+              MonthGroup(data: month),
+              const SizedBox(height: AppSpacing.md),
+            ],
         ],
       ),
     );

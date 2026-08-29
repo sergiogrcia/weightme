@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../services/weight_service.dart';
 import '../widgets/app_bottom_navigation.dart';
 import 'add_weight_screen.dart';
 import 'history_screen.dart';
@@ -15,6 +16,13 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
+  final _weightService = WeightService();
+
+  @override
+  void dispose() {
+    _weightService.dispose();
+    super.dispose();
+  }
 
   void _selectDestination(int index) {
     if (index >= 0 && index <= 3) {
@@ -24,20 +32,31 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          HomeScreen(onAddWeight: () => _selectDestination(2)),
-          const HistoryScreen(),
-          AddWeightScreen(onCancel: () => _selectDestination(0)),
-          const ProfileScreen(),
-        ],
-      ),
-      bottomNavigationBar: AppBottomNavigation(
-        currentIndex: _currentIndex,
-        onDestinationSelected: _selectDestination,
-      ),
+    return ListenableBuilder(
+      listenable: _weightService,
+      builder: (context, child) {
+        return Scaffold(
+          body: IndexedStack(
+            index: _currentIndex,
+            children: [
+              HomeScreen(
+                weightService: _weightService,
+                onAddWeight: () => _selectDestination(2),
+              ),
+              HistoryScreen(weightService: _weightService),
+              AddWeightScreen(
+                weightService: _weightService,
+                onCancel: () => _selectDestination(0),
+              ),
+              ProfileScreen(weightService: _weightService),
+            ],
+          ),
+          bottomNavigationBar: AppBottomNavigation(
+            currentIndex: _currentIndex,
+            onDestinationSelected: _selectDestination,
+          ),
+        );
+      },
     );
   }
 }

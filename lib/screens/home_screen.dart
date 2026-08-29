@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../services/weight_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
@@ -7,8 +8,13 @@ import '../theme/app_typography.dart';
 import '../widgets/weight_evolution_chart.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({required this.onAddWeight, super.key});
+  const HomeScreen({
+    required this.weightService,
+    required this.onAddWeight,
+    super.key,
+  });
 
+  final WeightService weightService;
   final VoidCallback onAddWeight;
 
   @override
@@ -20,6 +26,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final service = widget.weightService;
+
     return SafeArea(
       bottom: false,
       child: Column(
@@ -53,11 +61,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  const _CurrentWeightCard(),
+                  _CurrentWeightCard(weightService: service),
                   const SizedBox(height: AppSpacing.md),
-                  const _TotalLostCard(),
+                  _TotalLostCard(weightService: service),
                   const SizedBox(height: AppSpacing.md),
-                  const _GoalCard(),
+                  _GoalCard(weightService: service),
                   const SizedBox(height: AppSpacing.md),
                   _LogWeightButton(onPressed: widget.onAddWeight),
                 ],
@@ -99,20 +107,21 @@ class _ChartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SurfaceCard(
-      height: 350,
+      height: 380,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text(
-                  'Evolución del peso',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary),
-                ),
-              ),
+              Text('Evolución de peso', style: AppTypography.titleMedium),
+              const Spacer(),
+              const Icon(Icons.info_outline, color: AppColors.textSecondary, size: 20),
             ],
+          ),
+          const SizedBox(height: AppSpacing.xxs),
+          Text(
+            'Línea de tendencia y promedio diario',
+            style: AppTypography.bodySmall,
           ),
           const SizedBox(height: AppSpacing.md),
           Expanded(child: WeightEvolutionChart(period: selectedPeriod)),
@@ -124,10 +133,10 @@ class _ChartCard extends StatelessWidget {
                   child: _PeriodButton(
                     label: period,
                     selected: period == selectedPeriod,
-                    onPressed: () => onPeriodChanged(period),
+                    onTap: () => onPeriodChanged(period),
                   ),
                 ),
-                if (period != '6M') const SizedBox(width: AppSpacing.xxs),
+                if (period != '6M') const SizedBox(width: AppSpacing.xs),
               ],
             ],
           ),
@@ -138,27 +147,33 @@ class _ChartCard extends StatelessWidget {
 }
 
 class _PeriodButton extends StatelessWidget {
-  const _PeriodButton({required this.label, required this.selected, required this.onPressed});
+  const _PeriodButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   final String label;
   final bool selected;
-  final VoidCallback onPressed;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: selected ? AppColors.primary : AppColors.surfaceHighest,
-      borderRadius: AppRadius.pill,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: AppRadius.pill,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.all(AppRadius.small),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primary.withValues(alpha: .18) : AppColors.surfaceHighest,
+          borderRadius: BorderRadius.all(AppRadius.small),
+        ),
+        child: Center(
           child: Text(
             label,
-            textAlign: TextAlign.center,
             style: AppTypography.labelCaps.copyWith(
-              color: selected ? const Color(0xFF1000A9) : AppColors.textSecondary,
+              color: selected ? AppColors.primary : AppColors.textSecondary,
+              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
             ),
           ),
         ),
@@ -167,15 +182,25 @@ class _PeriodButton extends StatelessWidget {
   }
 }
 
-
-
 class _CurrentWeightCard extends StatelessWidget {
-  const _CurrentWeightCard();
+  const _CurrentWeightCard({required this.weightService});
+
+  final WeightService weightService;
 
   @override
   Widget build(BuildContext context) {
+    final currentWeight = weightService.currentWeight;
+    final weeklyChange = weightService.weeklyChange;
+    final weeklyStr = weeklyChange > 0
+        ? '+${weeklyChange.toStringAsFixed(1)} kg'
+        : '${weeklyChange.toStringAsFixed(1)} kg';
+
+    final lastEntryTime = weightService.entries.isNotEmpty
+        ? weightService.entries.first.time
+        : 'Sin registros';
+
     return _SurfaceCard(
-      height: 300,
+      height: 280,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -183,7 +208,10 @@ class _CurrentWeightCard extends StatelessWidget {
             children: [
               Text('Peso actual', style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary)),
               const Spacer(),
-              const Icon(Icons.trending_down, color: AppColors.secondary),
+              Icon(
+                weeklyChange <= 0 ? Icons.trending_down : Icons.trending_up,
+                color: weeklyChange <= 0 ? AppColors.secondary : AppColors.error,
+              ),
             ],
           ),
           const Spacer(),
@@ -191,8 +219,14 @@ class _CurrentWeightCard extends StatelessWidget {
             child: RichText(
               text: TextSpan(
                 children: [
-                  TextSpan(style: AppTypography.displayLarge.copyWith(fontSize: 72, height: 1), text: '75.4'),
-                  TextSpan(style: AppTypography.headlineLarge.copyWith(color: AppColors.textSecondary), text: ' kg'),
+                  TextSpan(
+                    style: AppTypography.displayLarge.copyWith(fontSize: 68, height: 1),
+                    text: currentWeight.toStringAsFixed(1),
+                  ),
+                  TextSpan(
+                    style: AppTypography.headlineLarge.copyWith(color: AppColors.textSecondary),
+                    text: ' ${weightService.profile.unit}',
+                  ),
                 ],
               ),
             ),
@@ -200,11 +234,15 @@ class _CurrentWeightCard extends StatelessWidget {
           const Spacer(),
           const Divider(color: AppColors.outlineVariant),
           const SizedBox(height: AppSpacing.xs),
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _Metric(label: 'ESTA SEMANA', value: '-0.8 kg', highlight: true),
-              _Metric(label: 'ÚLTIMO REGISTRO', value: 'Hoy'),
+              _Metric(
+                label: 'ESTA SEMANA',
+                value: weeklyStr,
+                highlight: weeklyChange <= 0,
+              ),
+              _Metric(label: 'ÚLTIMO REGISTRO', value: lastEntryTime),
             ],
           ),
         ],
@@ -239,21 +277,31 @@ class _Metric extends StatelessWidget {
 }
 
 class _TotalLostCard extends StatelessWidget {
-  const _TotalLostCard();
+  const _TotalLostCard({required this.weightService});
+
+  final WeightService weightService;
 
   @override
   Widget build(BuildContext context) {
+    final totalLost = weightService.totalLost;
+
     return _SurfaceCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Total perdido', style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary)),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           RichText(
             text: TextSpan(
               children: [
-                TextSpan(style: AppTypography.displayLarge.copyWith(color: AppColors.secondary), text: '12.6'),
-                TextSpan(style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary), text: ' kg'),
+                TextSpan(
+                  style: AppTypography.displayLarge.copyWith(color: AppColors.secondary),
+                  text: totalLost.toStringAsFixed(1),
+                ),
+                TextSpan(
+                  style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary),
+                  text: ' ${weightService.profile.unit}',
+                ),
               ],
             ),
           ),
@@ -262,7 +310,10 @@ class _TotalLostCard extends StatelessWidget {
             children: [
               const Icon(Icons.celebration_outlined, color: AppColors.secondary, size: 16),
               const SizedBox(width: AppSpacing.xs),
-              Text('Desde el 1 de enero', style: AppTypography.bodySmall),
+              Text(
+                'Desde ${weightService.profile.startingWeight.toStringAsFixed(1)} ${weightService.profile.unit}',
+                style: AppTypography.bodySmall,
+              ),
             ],
           ),
         ],
@@ -272,26 +323,34 @@ class _TotalLostCard extends StatelessWidget {
 }
 
 class _GoalCard extends StatelessWidget {
-  const _GoalCard();
+  const _GoalCard({required this.weightService});
+
+  final WeightService weightService;
 
   @override
   Widget build(BuildContext context) {
+    final target = weightService.profile.targetWeight;
+    final unit = weightService.profile.unit;
+    final remaining = weightService.remainingKg;
+    final progress = weightService.progressPercentage;
+    final percentInt = (progress * 100).toInt();
+
     return _SurfaceCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Text('Siguiente objetivo', style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary)),
+              Text('Objetivo final', style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary)),
               const Spacer(),
-              _GoalPill(),
+              _GoalPill(targetWeight: '$target $unit'),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           ClipRRect(
             borderRadius: AppRadius.pill,
-            child: const LinearProgressIndicator(
-              value: .65,
+            child: LinearProgressIndicator(
+              value: progress,
               minHeight: 12,
               backgroundColor: AppColors.surfaceHighest,
               color: AppColors.primary,
@@ -301,8 +360,8 @@ class _GoalCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('3.4 kg restantes', style: AppTypography.labelCaps),
-              Text('65%', style: AppTypography.labelCaps),
+              Text('${remaining.toStringAsFixed(1)} $unit restantes', style: AppTypography.labelCaps),
+              Text('$percentInt%', style: AppTypography.labelCaps),
             ],
           ),
         ],
@@ -312,12 +371,19 @@ class _GoalCard extends StatelessWidget {
 }
 
 class _GoalPill extends StatelessWidget {
+  const _GoalPill({required this.targetWeight});
+
+  final String targetWeight;
+
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.xxs),
-      decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: .12), borderRadius: AppRadius.pill),
-      child: Text('72.0 kg', style: AppTypography.labelCaps.copyWith(color: AppColors.primary)),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: .12),
+        borderRadius: AppRadius.pill,
+      ),
+      child: Text(targetWeight, style: AppTypography.labelCaps.copyWith(color: AppColors.primary)),
     );
   }
 }

@@ -1,23 +1,20 @@
 import 'package:flutter/material.dart';
 
+import '../services/weight_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({required this.weightService, super.key});
 
-  @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends State<ProfileScreen> {
-  bool _dailyReminders = true;
-  String _selectedUnit = 'kg';
+  final WeightService weightService;
 
   @override
   Widget build(BuildContext context) {
+    final profile = weightService.profile;
+
     return SafeArea(
       bottom: false,
       child: SingleChildScrollView(
@@ -31,17 +28,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             const _ProfileHeader(),
             const SizedBox(height: AppSpacing.lg),
-            const _WeightGoalsCard(),
+            _WeightGoalsCard(weightService: weightService),
             const SizedBox(height: AppSpacing.md),
             _AppSettingsCard(
-              dailyReminders: _dailyReminders,
-              selectedUnit: _selectedUnit,
+              dailyReminders: profile.dailyReminders,
+              selectedUnit: profile.unit,
               onRemindersChanged: (val) {
-                setState(() => _dailyReminders = val);
+                weightService.updateProfile(profile.copyWith(dailyReminders: val));
               },
               onUnitChanged: (unit) {
                 if (unit != null) {
-                  setState(() => _selectedUnit = unit);
+                  weightService.updateProfile(profile.copyWith(unit: unit));
                 }
               },
             ),
@@ -89,24 +86,19 @@ class _ProfileHeader extends StatelessWidget {
               child: Material(
                 color: AppColors.surfaceHighest,
                 shape: const CircleBorder(),
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Cambiar foto de perfil')),
-                    );
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Icon(Icons.edit, size: 16, color: AppColors.textPrimary),
-                  ),
+                elevation: 4,
+                child: IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.edit, size: 16, color: AppColors.primary),
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                  padding: EdgeInsets.zero,
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.sm),
-        const Text('Alex Mercer', style: AppTypography.headlineLarge),
+        const SizedBox(height: AppSpacing.md),
+        Text('Alex Mercer', style: AppTypography.headlineLarge),
         const SizedBox(height: AppSpacing.xxs),
         const Text('Activo desde oct. 2023', style: AppTypography.bodySmall),
       ],
@@ -115,10 +107,61 @@ class _ProfileHeader extends StatelessWidget {
 }
 
 class _WeightGoalsCard extends StatelessWidget {
-  const _WeightGoalsCard();
+  const _WeightGoalsCard({required this.weightService});
+
+  final WeightService weightService;
+
+  void _editTargetWeight(BuildContext context) {
+    final controller = TextEditingController(
+      text: weightService.profile.targetWeight.toStringAsFixed(1),
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.surfaceHigh,
+          title: Text('Editar Peso Meta', style: AppTypography.titleMedium),
+          content: TextField(
+            controller: controller,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            autofocus: true,
+            decoration: InputDecoration(
+              suffixText: weightService.profile.unit,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final val = double.tryParse(controller.text.replaceAll(',', '.'));
+                if (val != null && val > 0) {
+                  weightService.updateProfile(
+                    weightService.profile.copyWith(targetWeight: val),
+                  );
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('Guardar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final profile = weightService.profile;
+    final totalLost = weightService.totalLost;
+    final remaining = weightService.remainingKg;
+    final progress = weightService.progressPercentage;
+    final percentInt = (progress * 100).toInt();
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -142,20 +185,16 @@ class _WeightGoalsCard extends StatelessWidget {
               final isSmall = constraints.maxWidth < 400;
               final child1 = _GoalBox(
                 label: 'PESO INICIAL',
-                value: '85.2',
-                unit: 'kg',
+                value: profile.startingWeight.toStringAsFixed(1),
+                unit: profile.unit,
                 isHighlighted: false,
               );
               final child2 = _GoalBox(
                 label: 'PESO META',
-                value: '75.0',
-                unit: 'kg',
+                value: profile.targetWeight.toStringAsFixed(1),
+                unit: profile.unit,
                 isHighlighted: true,
-                onEdit: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Editar objetivo de peso')),
-                  );
-                },
+                onEdit: () => _editTargetWeight(context),
               );
 
               if (isSmall) {
@@ -183,7 +222,7 @@ class _WeightGoalsCard extends StatelessWidget {
             children: [
               const Text('Progreso total', style: AppTypography.bodySmall),
               Text(
-                '-4.5 kg',
+                '-${totalLost.toStringAsFixed(1)} ${profile.unit}',
                 style: AppTypography.titleMedium.copyWith(color: AppColors.secondary),
               ),
             ],
@@ -191,19 +230,19 @@ class _WeightGoalsCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           ClipRRect(
             borderRadius: AppRadius.pill,
-            child: const LinearProgressIndicator(
-              value: 0.44,
+            child: LinearProgressIndicator(
+              value: progress,
               minHeight: 12,
               backgroundColor: AppColors.surfaceHighest,
               color: AppColors.secondary,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('44% completado', style: AppTypography.labelCaps),
-              Text('5.7 kg restantes', style: AppTypography.labelCaps),
+              Text('$percentInt% completado', style: AppTypography.labelCaps),
+              Text('${remaining.toStringAsFixed(1)} ${profile.unit} restantes', style: AppTypography.labelCaps),
             ],
           ),
         ],
@@ -233,7 +272,7 @@ class _GoalBox extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: const BorderRadius.all(AppRadius.large),
+        borderRadius: BorderRadius.all(AppRadius.large),
         border: Border.all(
           color: isHighlighted
               ? AppColors.primary.withValues(alpha: .4)
@@ -318,89 +357,94 @@ class _AppSettingsCard extends StatelessWidget {
         children: [
           const Row(
             children: [
-              Icon(Icons.settings_outlined, color: AppColors.primary),
+              Icon(Icons.tune_outlined, color: AppColors.primary),
               SizedBox(width: AppSpacing.xs),
               Text('Ajustes de la App', style: AppTypography.titleMedium),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.xxs),
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.all(AppRadius.medium),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.notifications_outlined, color: AppColors.textSecondary),
-                const SizedBox(width: AppSpacing.xs),
-                const Expanded(
-                  child: Text('Recordatorios diarios', style: AppTypography.bodyLarge),
-                ),
-                Switch(
-                  value: dailyReminders,
-                  onChanged: onRemindersChanged,
-                  activeThumbColor: AppColors.primaryContainer,
-                  activeTrackColor: AppColors.primary.withValues(alpha: .3),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.xs),
-            child: Row(
-              children: [
-                const Icon(Icons.straighten_outlined, color: AppColors.textSecondary),
-                const SizedBox(width: AppSpacing.xs),
-                const Expanded(
-                  child: Text('Unidades', style: AppTypography.bodyLarge),
-                ),
-                DropdownButton<String>(
-                  value: selectedUnit,
-                  underline: const SizedBox(),
-                  dropdownColor: AppColors.surfaceHigh,
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.textPrimary),
-                  onChanged: onUnitChanged,
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'kg',
-                      child: Text('Kilogramos (kg)'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'lbs',
-                      child: Text('Libras (lbs)'),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Recordatorios diarios', style: AppTypography.bodyLarge),
+                    SizedBox(height: AppSpacing.xxs),
+                    Text(
+                      'Notificación diaria para registrar peso',
+                      style: AppTypography.bodySmall,
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+              Switch(
+                value: dailyReminders,
+                onChanged: onRemindersChanged,
+                activeThumbColor: AppColors.primaryContainer,
+                activeTrackColor: AppColors.primary.withValues(alpha: .3),
+              ),
+            ],
           ),
-          const SizedBox(height: AppSpacing.sm),
-          const Divider(color: AppColors.outlineVariant),
-          const SizedBox(height: AppSpacing.xs),
-          InkWell(
-            borderRadius: const BorderRadius.all(AppRadius.medium),
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Sesión cerrada')),
-              );
-            },
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.sm),
-              child: Row(
-                children: [
-                  Icon(Icons.logout_rounded, color: AppColors.error),
-                  SizedBox(width: AppSpacing.xs),
-                  Text(
-                    'Cerrar sesión',
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 16,
-                      color: AppColors.error,
-                      fontWeight: FontWeight.w500,
-                    ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
+            child: Divider(color: AppColors.outlineVariant),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Unidad de medida', style: AppTypography.bodyLarge),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceHighest,
+                  borderRadius: BorderRadius.all(AppRadius.small),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selectedUnit,
+                    dropdownColor: AppColors.surfaceHighest,
+                    style: AppTypography.bodySmall.copyWith(color: AppColors.textPrimary),
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'kg',
+                        child: Text('Kilogramos (kg)'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'lbs',
+                        child: Text('Libras (lbs)'),
+                      ),
+                    ],
+                    onChanged: onUnitChanged,
                   ),
-                ],
+                ),
+              ),
+            ],
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
+            child: Divider(color: AppColors.outlineVariant),
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Sesión cerrada')),
+                );
+              },
+              icon: const Icon(Icons.logout, color: AppColors.error),
+              label: Text(
+                'Cerrar sesión',
+                style: AppTypography.bodySmall.copyWith(color: AppColors.error),
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                side: const BorderSide(color: AppColors.error),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(AppRadius.medium),
+                ),
               ),
             ),
           ),

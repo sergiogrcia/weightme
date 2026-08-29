@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 
+import '../services/weight_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
 class AddWeightScreen extends StatefulWidget {
-  const AddWeightScreen({required this.onCancel, super.key});
+  const AddWeightScreen({
+    required this.weightService,
+    required this.onCancel,
+    super.key,
+  });
 
+  final WeightService weightService;
   final VoidCallback onCancel;
 
   @override
@@ -16,9 +22,17 @@ class AddWeightScreen extends StatefulWidget {
 
 class _AddWeightScreenState extends State<AddWeightScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _weightController = TextEditingController(text: '75.4');
+  late final TextEditingController _weightController;
   final _noteController = TextEditingController();
   DateTime _selectedDate = DateUtils.dateOnly(DateTime.now());
+
+  @override
+  void initState() {
+    super.initState();
+    _weightController = TextEditingController(
+      text: widget.weightService.currentWeight.toStringAsFixed(1),
+    );
+  }
 
   static const _months = [
     'enero',
@@ -68,14 +82,23 @@ class _AddWeightScreenState extends State<AddWeightScreen> {
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
-    final weight = _weightController.text;
+    final weight = double.tryParse(_weightController.text.replaceAll(',', '.'));
+    if (weight == null) return;
+
+    final note = _noteController.text.trim();
+    widget.weightService.addEntry(
+      weightKg: weight,
+      date: _selectedDate,
+      note: note.isEmpty ? null : note,
+    );
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
             const Icon(Icons.check_circle, color: AppColors.secondary),
             const SizedBox(width: AppSpacing.xs),
-            Text('¡Registro de $weight kg añadido con éxito!'),
+            Text('¡Registro de ${weight.toStringAsFixed(1)} kg guardado!'),
           ],
         ),
         duration: const Duration(seconds: 2),
