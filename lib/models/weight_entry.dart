@@ -14,12 +14,21 @@ class WeightEntry {
   final double delta; // positivo = subió, negativo = bajó, 0 = igual
 
   int get day => date.day;
-  String get time {
-    final hour = date.hour > 12 ? date.hour - 12 : (date.hour == 0 ? 12 : date.hour);
-    final period = date.hour >= 12 ? 'PM' : 'AM';
-    final minuteStr = date.minute.toString().padLeft(2, '0');
-    final hourStr = hour.toString().padLeft(2, '0');
-    return '$hourStr:$minuteStr $period';
+
+  String get dateFormatted {
+    final now = DateTime.now();
+    if (date.year == now.year && date.month == now.month && date.day == now.day) {
+      return 'Hoy';
+    }
+    final yesterday = now.subtract(const Duration(days: 1));
+    if (date.year == yesterday.year && date.month == yesterday.month && date.day == yesterday.day) {
+      return 'Ayer';
+    }
+    const months = [
+      'ene', 'feb', 'mar', 'abr', 'may', 'jun',
+      'jul', 'ago', 'sep', 'oct', 'nov', 'dic'
+    ];
+    return '${date.day} ${months[date.month - 1]}';
   }
 
   Map<String, dynamic> toJson() => {

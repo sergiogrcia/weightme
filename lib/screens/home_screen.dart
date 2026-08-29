@@ -207,8 +207,8 @@ class _CurrentWeightCard extends StatelessWidget {
         ? '+${weeklyChange.toStringAsFixed(1)} $unit'
         : '${weeklyChange.toStringAsFixed(1)} $unit';
 
-    final lastEntryTime = weightService.entries.isNotEmpty
-        ? weightService.entries.first.time
+    final lastEntryDate = weightService.entries.isNotEmpty
+        ? weightService.entries.first.dateFormatted
         : 'Sin registros';
 
     return _SurfaceCard(
@@ -254,7 +254,7 @@ class _CurrentWeightCard extends StatelessWidget {
                 value: weeklyStr,
                 highlight: weeklyChange <= 0,
               ),
-              _Metric(label: 'ÚLTIMO REGISTRO', value: lastEntryTime),
+              _Metric(label: 'ÚLTIMO REGISTRO', value: lastEntryDate),
             ],
           ),
         ],

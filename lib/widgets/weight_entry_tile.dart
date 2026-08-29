@@ -68,7 +68,8 @@ class WeightEntryTile extends StatelessWidget {
                     '${weightVal.toStringAsFixed(1)} $unitStr',
                     style: AppTypography.titleMedium,
                   ),
-                  Text(entry.time, style: AppTypography.bodySmall),
+                  if (entry.note != null && entry.note!.isNotEmpty)
+                    Text(entry.note!, style: AppTypography.bodySmall),
                 ],
               ),
             ],
