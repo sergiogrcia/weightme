@@ -80,6 +80,25 @@ class WeightService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateEntry({
+    required String id,
+    required double weightKg,
+    DateTime? date,
+    String? note,
+  }) async {
+    final index = _entries.indexWhere((entry) => entry.id == id);
+    if (index != -1) {
+      _entries[index] = _entries[index].copyWith(
+        weightKg: weightKg,
+        date: date ?? _entries[index].date,
+        note: note,
+      );
+      _sortEntriesAndCalculateDeltas();
+      await _saveEntries();
+      notifyListeners();
+    }
+  }
+
   Future<void> updateProfile(UserProfile newProfile) async {
     _profile = newProfile;
     final prefs = await SharedPreferences.getInstance();

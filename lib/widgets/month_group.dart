@@ -6,6 +6,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import 'edit_weight_modal.dart';
 import 'weight_entry_tile.dart';
 
 class MonthGroup extends StatelessWidget {
@@ -194,6 +195,8 @@ class _SlidableWeightTileState extends State<_SlidableWeightTile> with SingleTic
             onTap: () {
               if (_controller.isCompleted) {
                 _close();
+              } else if (widget.weightService != null) {
+                EditWeightModal.show(context, widget.entry, widget.weightService!);
               }
             },
             child: Container(
