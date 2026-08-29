@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../widgets/app_bottom_navigation.dart';
 import 'add_weight_screen.dart';
+import 'history_screen.dart';
 import 'home_screen.dart';
 
 class AppShell extends StatefulWidget {
@@ -15,7 +16,7 @@ class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
 
   void _selectDestination(int index) {
-    if (index == 0 || index == 2) {
+    if (index == 0 || index == 1 || index == 2) {
       setState(() => _currentIndex = index);
       return;
     }
@@ -30,10 +31,13 @@ class _AppShellState extends State<AppShell> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 760;
+        final Widget body = switch (_currentIndex) {
+          1 => const HistoryScreen(),
+          2 => AddWeightScreen(onCancel: () => _selectDestination(0)),
+          _ => HomeScreen(onAddWeight: () => _selectDestination(2)),
+        };
         return Scaffold(
-          body: _currentIndex == 2
-              ? AddWeightScreen(onCancel: () => _selectDestination(0))
-              : HomeScreen(onAddWeight: () => _selectDestination(2)),
+          body: body,
           bottomNavigationBar: isMobile
               ? AppBottomNavigation(
                   currentIndex: _currentIndex,
