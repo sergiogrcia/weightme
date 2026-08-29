@@ -30,7 +30,7 @@ class _AddWeightScreenState extends State<AddWeightScreen> {
   void initState() {
     super.initState();
     _weightController = TextEditingController(
-      text: widget.weightService.currentWeight.toStringAsFixed(1),
+      text: widget.weightService.currentDisplayWeight.toStringAsFixed(1),
     );
   }
 
@@ -82,23 +82,25 @@ class _AddWeightScreenState extends State<AddWeightScreen> {
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
-    final weight = double.tryParse(_weightController.text.replaceAll(',', '.'));
-    if (weight == null) return;
+    final inputWeight = double.tryParse(_weightController.text.replaceAll(',', '.'));
+    if (inputWeight == null) return;
 
+    final weightKg = widget.weightService.inputWeightToKg(inputWeight);
     final note = _noteController.text.trim();
     widget.weightService.addEntry(
-      weightKg: weight,
+      weightKg: weightKg,
       date: _selectedDate,
       note: note.isEmpty ? null : note,
     );
 
+    final unit = widget.weightService.profile.unit;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
             const Icon(Icons.check_circle, color: AppColors.secondary),
             const SizedBox(width: AppSpacing.xs),
-            Text('¡Registro de ${weight.toStringAsFixed(1)} kg guardado!'),
+            Text('¡Registro de ${inputWeight.toStringAsFixed(1)} $unit guardado!'),
           ],
         ),
         duration: const Duration(seconds: 2),
@@ -132,7 +134,10 @@ class _AddWeightScreenState extends State<AddWeightScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    _WeightInput(controller: _weightController),
+                    _WeightInput(
+                      controller: _weightController,
+                      unit: widget.weightService.profile.unit,
+                    ),
                     const SizedBox(height: AppSpacing.sm),
                     _DateSelector(
                       label: _dateLabel,
@@ -203,9 +208,10 @@ class _Header extends StatelessWidget {
 }
 
 class _WeightInput extends StatelessWidget {
-  const _WeightInput({required this.controller});
+  const _WeightInput({required this.controller, required this.unit});
 
   final TextEditingController controller;
+  final String unit;
 
   @override
   Widget build(BuildContext context) {
@@ -241,7 +247,7 @@ class _WeightInput extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                child: Text(' kg', style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary)),
+                child: Text(' $unit', style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary)),
               ),
             ],
           ),

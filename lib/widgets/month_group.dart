@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/weight_entry.dart';
+import '../services/weight_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
@@ -8,9 +9,14 @@ import '../theme/app_typography.dart';
 import 'weight_entry_tile.dart';
 
 class MonthGroup extends StatelessWidget {
-  const MonthGroup({required this.data, super.key});
+  const MonthGroup({
+    required this.data,
+    this.weightService,
+    super.key,
+  });
 
   final MonthEntries data;
+  final WeightService? weightService;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +39,10 @@ class MonthGroup extends StatelessWidget {
           child: Column(
             children: [
               for (var i = 0; i < data.entries.length; i++) ...[
-                WeightEntryTile(entry: data.entries[i]),
+                WeightEntryTile(
+                  entry: data.entries[i],
+                  weightService: weightService,
+                ),
                 if (i != data.entries.length - 1)
                   const Divider(height: 1, color: AppColors.outlineVariant),
               ],

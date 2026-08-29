@@ -80,15 +80,35 @@ class WeightService extends ChangeNotifier {
     notifyListeners();
   }
 
+  static const double kgToLbsRatio = 2.20462262185;
+
+  double displayWeight(double weightInKg) {
+    if (_profile.unit == 'lbs') {
+      return double.parse((weightInKg * kgToLbsRatio).toStringAsFixed(1));
+    }
+    return double.parse(weightInKg.toStringAsFixed(1));
+  }
+
+  double inputWeightToKg(double inputWeight) {
+    if (_profile.unit == 'lbs') {
+      return inputWeight / kgToLbsRatio;
+    }
+    return inputWeight;
+  }
+
   double get currentWeight {
     if (_entries.isEmpty) return _profile.startingWeight;
     return _entries.first.weightKg;
   }
 
+  double get currentDisplayWeight => displayWeight(currentWeight);
+
   double get totalLost {
     final lost = _profile.startingWeight - currentWeight;
     return lost < 0 ? 0.0 : lost;
   }
+
+  double get totalLostDisplay => displayWeight(totalLost);
 
   double get weeklyChange {
     if (_entries.length < 2) return 0.0;
@@ -107,6 +127,8 @@ class WeightService extends ChangeNotifier {
     return currentWeight - oldestInWeek.weightKg;
   }
 
+  double get weeklyChangeDisplay => displayWeight(weeklyChange);
+
   double get progressPercentage {
     final totalToLose = _profile.startingWeight - _profile.targetWeight;
     if (totalToLose <= 0) return 1.0;
@@ -119,6 +141,8 @@ class WeightService extends ChangeNotifier {
     final remaining = currentWeight - _profile.targetWeight;
     return remaining < 0 ? 0.0 : remaining;
   }
+
+  double get remainingDisplay => displayWeight(remainingKg);
 
   List<MonthEntries> get historyByMonth {
     final Map<String, List<WeightEntry>> grouped = {};

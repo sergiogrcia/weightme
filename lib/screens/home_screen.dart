@@ -56,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: AppSpacing.lg),
                   _ChartCard(
                     selectedPeriod: _selectedPeriod,
+                    weightService: service,
                     onPeriodChanged: (period) {
                       setState(() => _selectedPeriod = period);
                     },
@@ -99,10 +100,15 @@ class _TopBar extends StatelessWidget {
 }
 
 class _ChartCard extends StatelessWidget {
-  const _ChartCard({required this.selectedPeriod, required this.onPeriodChanged});
+  const _ChartCard({
+    required this.selectedPeriod,
+    required this.onPeriodChanged,
+    this.weightService,
+  });
 
   final String selectedPeriod;
   final ValueChanged<String> onPeriodChanged;
+  final WeightService? weightService;
 
   @override
   Widget build(BuildContext context) {
@@ -124,7 +130,12 @@ class _ChartCard extends StatelessWidget {
             style: AppTypography.bodySmall,
           ),
           const SizedBox(height: AppSpacing.md),
-          Expanded(child: WeightEvolutionChart(period: selectedPeriod)),
+          Expanded(
+            child: WeightEvolutionChart(
+              period: selectedPeriod,
+              weightService: weightService,
+            ),
+          ),
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
@@ -189,11 +200,12 @@ class _CurrentWeightCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentWeight = weightService.currentWeight;
-    final weeklyChange = weightService.weeklyChange;
+    final currentWeight = weightService.currentDisplayWeight;
+    final weeklyChange = weightService.weeklyChangeDisplay;
+    final unit = weightService.profile.unit;
     final weeklyStr = weeklyChange > 0
-        ? '+${weeklyChange.toStringAsFixed(1)} kg'
-        : '${weeklyChange.toStringAsFixed(1)} kg';
+        ? '+${weeklyChange.toStringAsFixed(1)} $unit'
+        : '${weeklyChange.toStringAsFixed(1)} $unit';
 
     final lastEntryTime = weightService.entries.isNotEmpty
         ? weightService.entries.first.time
@@ -225,7 +237,7 @@ class _CurrentWeightCard extends StatelessWidget {
                   ),
                   TextSpan(
                     style: AppTypography.headlineLarge.copyWith(color: AppColors.textSecondary),
-                    text: ' ${weightService.profile.unit}',
+                    text: ' $unit',
                   ),
                 ],
               ),
@@ -283,7 +295,8 @@ class _TotalLostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final totalLost = weightService.totalLost;
+    final totalLost = weightService.totalLostDisplay;
+    final startingWeight = weightService.displayWeight(weightService.profile.startingWeight);
 
     return _SurfaceCard(
       child: Column(
@@ -311,7 +324,7 @@ class _TotalLostCard extends StatelessWidget {
               const Icon(Icons.celebration_outlined, color: AppColors.secondary, size: 16),
               const SizedBox(width: AppSpacing.xs),
               Text(
-                'Desde ${weightService.profile.startingWeight.toStringAsFixed(1)} ${weightService.profile.unit}',
+                'Desde ${startingWeight.toStringAsFixed(1)} ${weightService.profile.unit}',
                 style: AppTypography.bodySmall,
               ),
             ],
@@ -329,9 +342,9 @@ class _GoalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final target = weightService.profile.targetWeight;
+    final target = weightService.displayWeight(weightService.profile.targetWeight);
     final unit = weightService.profile.unit;
-    final remaining = weightService.remainingKg;
+    final remaining = weightService.remainingDisplay;
     final progress = weightService.progressPercentage;
     final percentInt = (progress * 100).toInt();
 

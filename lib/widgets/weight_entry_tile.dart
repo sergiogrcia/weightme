@@ -1,17 +1,27 @@
 import 'package:flutter/material.dart';
 
 import '../models/weight_entry.dart';
+import '../services/weight_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
 class WeightEntryTile extends StatelessWidget {
-  const WeightEntryTile({required this.entry, super.key});
+  const WeightEntryTile({
+    required this.entry,
+    this.weightService,
+    super.key,
+  });
 
   final WeightEntry entry;
+  final WeightService? weightService;
 
   @override
   Widget build(BuildContext context) {
+    final weightVal = weightService?.displayWeight(entry.weightKg) ?? entry.weightKg;
+    final deltaVal = weightService?.displayWeight(entry.delta) ?? entry.delta;
+    final unitStr = weightService?.profile.unit ?? 'kg';
+
     final isUp = entry.delta > 0;
     final isDown = entry.delta < 0;
 
@@ -28,7 +38,7 @@ class WeightEntryTile extends StatelessWidget {
             : Icons.remove_rounded;
 
     return Padding(
-      padding: const EdgeInsets.all(AppSpacing.sm + AppSpacing.xxs), // ~16
+      padding: const EdgeInsets.all(AppSpacing.sm + AppSpacing.xxs),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -55,7 +65,7 @@ class WeightEntryTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${entry.weightKg.toStringAsFixed(1)} kg',
+                    '${weightVal.toStringAsFixed(1)} $unitStr',
                     style: AppTypography.titleMedium,
                   ),
                   Text(entry.time, style: AppTypography.bodySmall),
@@ -68,7 +78,7 @@ class WeightEntryTile extends StatelessWidget {
               Icon(deltaIcon, size: 20, color: deltaColor),
               const SizedBox(width: AppSpacing.xxs),
               Text(
-                entry.delta.abs().toStringAsFixed(1),
+                deltaVal.abs().toStringAsFixed(1),
                 style: AppTypography.titleMedium.copyWith(
                   fontSize: 14,
                   color: deltaColor,

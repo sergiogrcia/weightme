@@ -1,15 +1,26 @@
 import 'package:flutter/material.dart';
 
+import '../services/weight_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
 class WeightEvolutionChart extends StatelessWidget {
-  const WeightEvolutionChart({this.period = '1M', super.key});
+  const WeightEvolutionChart({
+    this.period = '1M',
+    this.weightService,
+    super.key,
+  });
 
   final String period;
+  final WeightService? weightService;
 
   @override
   Widget build(BuildContext context) {
+    final unitStr = weightService?.profile.unit ?? 'kg';
+    final topLabel = '${weightService?.displayWeight(78) ?? 78.0} $unitStr';
+    final midLabel = '${weightService?.displayWeight(76) ?? 76.0} $unitStr';
+    final botLabel = '${weightService?.displayWeight(74) ?? 74.0} $unitStr';
+
     final labels = switch (period) {
       '1S' => const ['Lun', 'Jue', 'Dom'],
       '3M' => const ['Ago', 'Sep', 'Oct'],
@@ -22,29 +33,29 @@ class WeightEvolutionChart extends StatelessWidget {
         return Stack(
           children: [
             Positioned.fill(
-              left: 38,
+              left: 48,
               bottom: 26,
               child: CustomPaint(
                 painter: _WeightChartPainter(period: period),
               ),
             ),
-            const Positioned(
+            Positioned(
               top: 0,
               left: 0,
-              child: _AxisLabel('78 kg'),
+              child: _AxisLabel(topLabel),
             ),
             Positioned(
               top: constraints.maxHeight * .43,
               left: 0,
-              child: const _AxisLabel('76 kg'),
+              child: _AxisLabel(midLabel),
             ),
             Positioned(
               bottom: 24,
               left: 0,
-              child: const _AxisLabel('74 kg'),
+              child: _AxisLabel(botLabel),
             ),
             Positioned(
-              left: 40,
+              left: 50,
               bottom: 0,
               child: _AxisLabel(labels[0]),
             ),

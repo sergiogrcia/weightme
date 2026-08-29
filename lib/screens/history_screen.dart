@@ -49,7 +49,7 @@ class HistoryScreen extends StatelessWidget {
             )
           else
             for (final month in history) ...[
-              MonthGroup(data: month),
+              MonthGroup(data: month, weightService: weightService),
               const SizedBox(height: AppSpacing.md),
             ],
         ],
