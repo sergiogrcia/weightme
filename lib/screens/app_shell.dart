@@ -4,6 +4,7 @@ import '../widgets/app_bottom_navigation.dart';
 import 'add_weight_screen.dart';
 import 'history_screen.dart';
 import 'home_screen.dart';
+import 'profile_screen.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -16,14 +17,9 @@ class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
 
   void _selectDestination(int index) {
-    if (index == 0 || index == 1 || index == 2) {
+    if (index >= 0 && index <= 3) {
       setState(() => _currentIndex = index);
-      return;
     }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Esta pantalla estará disponible próximamente.')),
-    );
   }
 
   @override
@@ -34,6 +30,7 @@ class _AppShellState extends State<AppShell> {
         final Widget body = switch (_currentIndex) {
           1 => const HistoryScreen(),
           2 => AddWeightScreen(onCancel: () => _selectDestination(0)),
+          3 => const ProfileScreen(),
           _ => HomeScreen(onAddWeight: () => _selectDestination(2)),
         };
         return Scaffold(
