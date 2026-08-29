@@ -20,134 +20,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
       bottom: false,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth >= 760;
-          return Column(
-            children: [
-              _ProfileTopBar(isDesktop: isDesktop),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    isDesktop ? AppSpacing.desktopMargin : AppSpacing.mobileMargin,
-                    AppSpacing.md,
-                    isDesktop ? AppSpacing.desktopMargin : AppSpacing.mobileMargin,
-                    AppSpacing.lg,
-                  ),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1200),
-                      child: Column(
-                        children: [
-                          const _ProfileHeader(),
-                          const SizedBox(height: AppSpacing.lg),
-                          if (isDesktop)
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  flex: 7,
-                                  child: _WeightGoalsCard(),
-                                ),
-                                const SizedBox(width: AppSpacing.md),
-                                Expanded(
-                                  flex: 5,
-                                  child: _AppSettingsCard(
-                                    dailyReminders: _dailyReminders,
-                                    selectedUnit: _selectedUnit,
-                                    onRemindersChanged: (val) {
-                                      setState(() => _dailyReminders = val);
-                                    },
-                                    onUnitChanged: (unit) {
-                                      if (unit != null) {
-                                        setState(() => _selectedUnit = unit);
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ],
-                            )
-                          else
-                            Column(
-                              children: [
-                                const _WeightGoalsCard(),
-                                const SizedBox(height: AppSpacing.md),
-                                _AppSettingsCard(
-                                  dailyReminders: _dailyReminders,
-                                  selectedUnit: _selectedUnit,
-                                  onRemindersChanged: (val) {
-                                    setState(() => _dailyReminders = val);
-                                  },
-                                  onUnitChanged: (unit) {
-                                    if (unit != null) {
-                                      setState(() => _selectedUnit = unit);
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _ProfileTopBar extends StatelessWidget {
-  const _ProfileTopBar({required this.isDesktop});
-
-  final bool isDesktop;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 64,
-      padding: EdgeInsets.symmetric(
-        horizontal: isDesktop ? AppSpacing.desktopMargin : AppSpacing.mobileMargin,
-      ),
-      color: AppColors.background.withValues(alpha: .9),
-      child: Row(
-        children: [
-          const Icon(Icons.insights_outlined, color: AppColors.primary),
-          const SizedBox(width: AppSpacing.sm),
-          const Icon(Icons.show_chart_rounded, color: AppColors.primary),
-          if (isDesktop) ...[
-            const SizedBox(width: AppSpacing.xs),
-            const Text('WeightMe', style: AppTypography.titleMedium),
-            const Spacer(),
-            const _NavItem('RESUMEN', active: false),
-            const _NavItem('HISTORIAL', active: false),
-            const _NavItem('PERFIL', active: true),
-          ] else
-            const Spacer(),
-          if (!isDesktop) const Icon(Icons.menu, color: AppColors.textPrimary),
-        ],
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  const _NavItem(this.label, {required this.active});
-
-  final String label;
-  final bool active;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: AppSpacing.md),
-      child: Text(
-        label,
-        style: AppTypography.labelCaps.copyWith(
-          color: active ? AppColors.primary : AppColors.textSecondary,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.mobileMargin,
+          AppSpacing.md,
+          AppSpacing.mobileMargin,
+          AppSpacing.lg,
+        ),
+        child: Column(
+          children: [
+            const _ProfileHeader(),
+            const SizedBox(height: AppSpacing.lg),
+            const _WeightGoalsCard(),
+            const SizedBox(height: AppSpacing.md),
+            _AppSettingsCard(
+              dailyReminders: _dailyReminders,
+              selectedUnit: _selectedUnit,
+              onRemindersChanged: (val) {
+                setState(() => _dailyReminders = val);
+              },
+              onUnitChanged: (unit) {
+                if (unit != null) {
+                  setState(() => _selectedUnit = unit);
+                }
+              },
+            ),
+          ],
         ),
       ),
     );

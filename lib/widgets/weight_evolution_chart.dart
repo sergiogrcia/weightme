@@ -4,10 +4,19 @@ import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
 class WeightEvolutionChart extends StatelessWidget {
-  const WeightEvolutionChart({super.key});
+  const WeightEvolutionChart({this.period = '1M', super.key});
+
+  final String period;
 
   @override
   Widget build(BuildContext context) {
+    final labels = switch (period) {
+      '1S' => const ['Lun', 'Jue', 'Dom'],
+      '3M' => const ['Ago', 'Sep', 'Oct'],
+      '6M' => const ['May', 'Jul', 'Oct'],
+      _ => const ['1 oct', '15 oct', '31 oct'],
+    };
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return Stack(
@@ -15,7 +24,9 @@ class WeightEvolutionChart extends StatelessWidget {
             Positioned.fill(
               left: 38,
               bottom: 26,
-              child: CustomPaint(painter: _WeightChartPainter()),
+              child: CustomPaint(
+                painter: _WeightChartPainter(period: period),
+              ),
             ),
             const Positioned(
               top: 0,
@@ -32,24 +43,24 @@ class WeightEvolutionChart extends StatelessWidget {
               left: 0,
               child: const _AxisLabel('74 kg'),
             ),
-            const Positioned(
+            Positioned(
               left: 40,
               bottom: 0,
-              child: _AxisLabel('1 oct'),
+              child: _AxisLabel(labels[0]),
             ),
-            const Positioned(
+            Positioned(
               bottom: 0,
               left: 0,
               right: 0,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [_AxisLabel('15 oct')],
+                children: [_AxisLabel(labels[1])],
               ),
             ),
-            const Positioned(
+            Positioned(
               right: 0,
               bottom: 0,
-              child: _AxisLabel('31 oct'),
+              child: _AxisLabel(labels[2]),
             ),
           ],
         );
@@ -70,6 +81,10 @@ class _AxisLabel extends StatelessWidget {
 }
 
 class _WeightChartPainter extends CustomPainter {
+  _WeightChartPainter({required this.period});
+
+  final String period;
+
   @override
   void paint(Canvas canvas, Size size) {
     final gridPaint = Paint()
@@ -87,14 +102,40 @@ class _WeightChartPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
 
-    final points = <Offset>[
-      Offset(0, size.height * .83),
-      Offset(size.width * .2, size.height * .7),
-      Offset(size.width * .4, size.height * .6),
-      Offset(size.width * .6, size.height * .42),
-      Offset(size.width * .8, size.height * .32),
-      Offset(size.width, size.height * .08),
-    ];
+    final points = switch (period) {
+      '1S' => <Offset>[
+          Offset(0, size.height * .45),
+          Offset(size.width * .2, size.height * .50),
+          Offset(size.width * .4, size.height * .35),
+          Offset(size.width * .6, size.height * .40),
+          Offset(size.width * .8, size.height * .25),
+          Offset(size.width, size.height * .20),
+        ],
+      '3M' => <Offset>[
+          Offset(0, size.height * .90),
+          Offset(size.width * .25, size.height * .75),
+          Offset(size.width * .50, size.height * .55),
+          Offset(size.width * .75, size.height * .30),
+          Offset(size.width, size.height * .15),
+        ],
+      '6M' => <Offset>[
+          Offset(0, size.height * .95),
+          Offset(size.width * .2, size.height * .85),
+          Offset(size.width * .4, size.height * .70),
+          Offset(size.width * .6, size.height * .50),
+          Offset(size.width * .8, size.height * .30),
+          Offset(size.width, size.height * .10),
+        ],
+      _ => <Offset>[
+          Offset(0, size.height * .83),
+          Offset(size.width * .2, size.height * .7),
+          Offset(size.width * .4, size.height * .6),
+          Offset(size.width * .6, size.height * .42),
+          Offset(size.width * .8, size.height * .32),
+          Offset(size.width, size.height * .08),
+        ],
+    };
+
     final line = Path()..moveTo(points.first.dx, points.first.dy);
     for (final point in points.skip(1)) {
       line.lineTo(point.dx, point.dy);
@@ -120,5 +161,5 @@ class _WeightChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _WeightChartPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _WeightChartPainter oldDelegate) => oldDelegate.period != period;
 }

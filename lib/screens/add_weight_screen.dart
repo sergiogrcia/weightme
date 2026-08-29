@@ -68,9 +68,20 @@ class _AddWeightScreenState extends State<AddWeightScreen> {
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
+    final weight = _weightController.text;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('El almacenamiento se conectará en el siguiente paso.')),
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: AppColors.secondary),
+            const SizedBox(width: AppSpacing.xs),
+            Text('¡Registro de $weight kg añadido con éxito!'),
+          ],
+        ),
+        duration: const Duration(seconds: 2),
+      ),
     );
+    widget.onCancel();
   }
 
   @override

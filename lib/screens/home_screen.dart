@@ -22,123 +22,69 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
       bottom: false,
-      child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isDesktop = constraints.maxWidth >= 760;
-            return Column(
-              children: [
-                _TopBar(isDesktop: isDesktop),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(
-                      isDesktop ? AppSpacing.desktopMargin : AppSpacing.mobileMargin,
-                      AppSpacing.md,
-                      isDesktop ? AppSpacing.desktopMargin : AppSpacing.mobileMargin,
-                      AppSpacing.lg,
-                    ),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 1200),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Resumen',
-                              style: (isDesktop
-                                      ? AppTypography.headlineLarge
-                                      : AppTypography.headlineLarge.copyWith(fontSize: 28))
-                                  .copyWith(height: 36 / 28),
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                            const Text(
-                              'Tu progreso de un vistazo.',
-                              style: AppTypography.bodyLarge,
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                            _ChartCard(
-                              selectedPeriod: _selectedPeriod,
-                              onPeriodChanged: (period) {
-                                setState(() => _selectedPeriod = period);
-                              },
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            if (isDesktop)
-                              _DesktopStats()
-                            else
-                              Column(
-                                children: [
-                                  const _CurrentWeightCard(),
-                                  const SizedBox(height: AppSpacing.md),
-                                  const _TotalLostCard(),
-                                  const SizedBox(height: AppSpacing.md),
-                                  const _GoalCard(),
-                                  const SizedBox(height: AppSpacing.md),
-                                  _LogWeightButton(onPressed: widget.onAddWeight),
-                                ],
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-      ),
-    );
-  }
-}
-
-class _TopBar extends StatelessWidget {
-  const _TopBar({required this.isDesktop});
-
-  final bool isDesktop;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 64,
-      padding: EdgeInsets.symmetric(
-        horizontal: isDesktop ? AppSpacing.desktopMargin : AppSpacing.mobileMargin,
-      ),
-      color: AppColors.background.withValues(alpha: .9),
-      child: Row(
+      child: Column(
         children: [
-          const Icon(Icons.insights_outlined, color: AppColors.primary),
-          const SizedBox(width: AppSpacing.sm),
-          const Icon(Icons.show_chart_rounded, color: AppColors.primary),
-          if (isDesktop) ...[
-            const SizedBox(width: AppSpacing.xs),
-            Text('WeightMe', style: AppTypography.titleMedium),
-            const Spacer(),
-            const _DesktopNavItem('RESUMEN', active: true),
-            const _DesktopNavItem('HISTORIAL'),
-            const _DesktopNavItem('PERFIL'),
-          ] else
-            const Spacer(),
-          if (!isDesktop) const Icon(Icons.menu, color: AppColors.textPrimary),
+          const _TopBar(),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.mobileMargin,
+                AppSpacing.md,
+                AppSpacing.mobileMargin,
+                AppSpacing.lg,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Resumen',
+                    style: AppTypography.headlineLarge.copyWith(fontSize: 28, height: 36 / 28),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  const Text(
+                    'Tu progreso de un vistazo.',
+                    style: AppTypography.bodyLarge,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  _ChartCard(
+                    selectedPeriod: _selectedPeriod,
+                    onPeriodChanged: (period) {
+                      setState(() => _selectedPeriod = period);
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  const _CurrentWeightCard(),
+                  const SizedBox(height: AppSpacing.md),
+                  const _TotalLostCard(),
+                  const SizedBox(height: AppSpacing.md),
+                  const _GoalCard(),
+                  const SizedBox(height: AppSpacing.md),
+                  _LogWeightButton(onPressed: widget.onAddWeight),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _DesktopNavItem extends StatelessWidget {
-  const _DesktopNavItem(this.label, {this.active = false});
-
-  final String label;
-  final bool active;
+class _TopBar extends StatelessWidget {
+  const _TopBar();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: AppSpacing.md),
-      child: Text(
-        label,
-        style: AppTypography.labelCaps.copyWith(
-          color: active ? AppColors.primary : AppColors.textSecondary,
-        ),
+    return Container(
+      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.mobileMargin),
+      color: AppColors.background.withValues(alpha: .9),
+      child: const Row(
+        children: [
+          Icon(Icons.show_chart_rounded, color: AppColors.primary, size: 26),
+          SizedBox(width: AppSpacing.xs),
+          Text('WeightMe', style: AppTypography.titleMedium),
+        ],
       ),
     );
   }
@@ -169,7 +115,7 @@ class _ChartCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          const Expanded(child: WeightEvolutionChart()),
+          Expanded(child: WeightEvolutionChart(period: selectedPeriod)),
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
@@ -221,30 +167,7 @@ class _PeriodButton extends StatelessWidget {
   }
 }
 
-class _DesktopStats extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return const SizedBox(
-      height: 300,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(flex: 2, child: _CurrentWeightCard()),
-          SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              children: [
-                Expanded(child: _TotalLostCard()),
-                SizedBox(height: AppSpacing.md),
-                Expanded(child: _GoalCard()),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+
 
 class _CurrentWeightCard extends StatelessWidget {
   const _CurrentWeightCard();
