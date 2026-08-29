@@ -21,4 +21,5 @@ abstract final class AppColors {
   static const tertiary = Color(0xFFFFB2B7);
   static const tertiaryContainer = Color(0xFFFF516A);
   static const error = Color(0xFFFFB4AB);
+  static const deleteAction = Color(0xFFE53935);
 }

@@ -73,6 +73,13 @@ class WeightService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> restoreEntry(WeightEntry entry) async {
+    _entries.add(entry);
+    _sortEntriesAndCalculateDeltas();
+    await _saveEntries();
+    notifyListeners();
+  }
+
   Future<void> updateProfile(UserProfile newProfile) async {
     _profile = newProfile;
     final prefs = await SharedPreferences.getInstance();
