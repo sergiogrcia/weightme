@@ -249,7 +249,7 @@ class _OnboardingActivityLevelScreenState
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'PASO 4 DE 4',
+              'PASO 4 DE 5',
               style: AppTypography.labelCaps.copyWith(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,

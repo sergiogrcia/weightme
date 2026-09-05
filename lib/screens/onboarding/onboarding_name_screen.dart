@@ -240,7 +240,7 @@ class _OnboardingNameScreenState extends State<OnboardingNameScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'PASO 1 DE 4',
+              'PASO 1 DE 5',
               style: AppTypography.labelCaps.copyWith(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
