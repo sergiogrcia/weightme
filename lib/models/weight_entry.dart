@@ -78,6 +78,7 @@ class UserProfile {
     this.targetWeight = 0.0,
     this.unit = 'kg',
     this.dailyReminders = true,
+    this.isOnboardingCompleted = false,
   });
 
   final String name;
@@ -85,6 +86,7 @@ class UserProfile {
   final double targetWeight;
   final String unit;
   final bool dailyReminders;
+  final bool isOnboardingCompleted;
 
   Map<String, dynamic> toJson() => {
         'name': name,
@@ -92,6 +94,7 @@ class UserProfile {
         'targetWeight': targetWeight,
         'unit': unit,
         'dailyReminders': dailyReminders,
+        'isOnboardingCompleted': isOnboardingCompleted,
       };
 
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
@@ -100,6 +103,7 @@ class UserProfile {
         targetWeight: (json['targetWeight'] as num?)?.toDouble() ?? 0.0,
         unit: json['unit'] as String? ?? 'kg',
         dailyReminders: json['dailyReminders'] as bool? ?? true,
+        isOnboardingCompleted: json['isOnboardingCompleted'] as bool? ?? false,
       );
 
   UserProfile copyWith({
@@ -108,6 +112,7 @@ class UserProfile {
     double? targetWeight,
     String? unit,
     bool? dailyReminders,
+    bool? isOnboardingCompleted,
   }) {
     return UserProfile(
       name: name ?? this.name,
@@ -115,6 +120,7 @@ class UserProfile {
       targetWeight: targetWeight ?? this.targetWeight,
       unit: unit ?? this.unit,
       dailyReminders: dailyReminders ?? this.dailyReminders,
+      isOnboardingCompleted: isOnboardingCompleted ?? this.isOnboardingCompleted,
     );
   }
 }

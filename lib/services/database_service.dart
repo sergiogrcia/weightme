@@ -22,7 +22,7 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE entries (
@@ -41,9 +41,19 @@ class DatabaseService {
             startingWeight REAL NOT NULL,
             targetWeight REAL NOT NULL,
             unit TEXT NOT NULL,
-            dailyReminders INTEGER NOT NULL
+            dailyReminders INTEGER NOT NULL,
+            isOnboardingCompleted INTEGER NOT NULL DEFAULT 0
           )
         ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          try {
+            await db.execute(
+              'ALTER TABLE profile ADD COLUMN isOnboardingCompleted INTEGER NOT NULL DEFAULT 0',
+            );
+          } catch (_) {}
+        }
       },
     );
   }
@@ -104,6 +114,7 @@ class DatabaseService {
     if (maps.isNotEmpty) {
       final data = Map<String, dynamic>.from(maps.first);
       data['dailyReminders'] = (data['dailyReminders'] as int) == 1;
+      data['isOnboardingCompleted'] = (data['isOnboardingCompleted'] as int? ?? 0) == 1;
       return UserProfile.fromJson(data);
     }
     return null;
@@ -114,6 +125,7 @@ class DatabaseService {
     final data = profile.toJson();
     data['id'] = 1;
     data['dailyReminders'] = profile.dailyReminders ? 1 : 0;
+    data['isOnboardingCompleted'] = profile.isOnboardingCompleted ? 1 : 0;
     await db.insert('profile', data, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
@@ -126,6 +138,7 @@ class DatabaseService {
       final profileData = profile.toJson();
       profileData['id'] = 1;
       profileData['dailyReminders'] = profile.dailyReminders ? 1 : 0;
+      profileData['isOnboardingCompleted'] = profile.isOnboardingCompleted ? 1 : 0;
       await txn.insert('profile', profileData, conflictAlgorithm: ConflictAlgorithm.replace);
 
       for (final entry in entries) {
