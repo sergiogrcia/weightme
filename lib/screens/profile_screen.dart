@@ -42,6 +42,8 @@ class ProfileScreen extends StatelessWidget {
                 }
               },
             ),
+            const SizedBox(height: AppSpacing.md),
+            _BackupCard(weightService: weightService),
           ],
         ),
       ),
@@ -447,6 +449,151 @@ class _AppSettingsCard extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BackupCard extends StatelessWidget {
+  const _BackupCard({required this.weightService});
+
+  final WeightService weightService;
+
+  Future<void> _importBackup(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surfaceHigh,
+        title: Text('Restaurar copia de seguridad', style: AppTypography.titleMedium),
+        content: const Text(
+          'Esta acción reemplazará los datos actuales por los del archivo JSON seleccionado. ¿Deseas continuar?',
+          style: AppTypography.bodySmall,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+            child: const Text('Restaurar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    final success = await weightService.importBackupFromFile();
+
+    if (!context.mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: AppColors.secondary),
+              SizedBox(width: AppSpacing.xs),
+              Text('¡Copia de seguridad restaurada con éxito!'),
+            ],
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo importar el archivo JSON o la operación fue cancelada.'),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLow,
+        borderRadius: AppRadius.card,
+        border: Border.all(color: AppColors.outlineVariant.withValues(alpha: .2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.cloud_sync_outlined, color: AppColors.primary),
+              SizedBox(width: AppSpacing.xs),
+              Text('Copia de seguridad', style: AppTypography.titleMedium),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          const Text(
+            'Exporta tus datos a JSON para guardarlos fuera de la app o impórtalos al cambiar de móvil.',
+            style: AppTypography.bodySmall,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    try {
+                      final filePath = await weightService.exportBackupFile();
+                      if (context.mounted && filePath != null) {
+                        ScaffoldMessenger.of(context).clearSnackBars();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                const Icon(Icons.check_circle, color: AppColors.secondary),
+                                const SizedBox(width: AppSpacing.xs),
+                                Expanded(
+                                  child: Text('¡Copia guardada con éxito en:\n$filePath'),
+                                ),
+                              ],
+                            ),
+                            duration: const Duration(seconds: 5),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error al exportar copia de seguridad: $e')),
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.download_outlined, size: 18),
+                  label: const Text('Exportar JSON'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(AppRadius.medium),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () => _importBackup(context),
+                  icon: const Icon(Icons.download_for_offline_outlined, size: 18),
+                  label: const Text('Importar JSON'),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(AppRadius.medium),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

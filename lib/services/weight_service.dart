@@ -1,16 +1,22 @@
 import 'dart:convert';
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/weight_entry.dart';
+import 'database_service.dart';
 
 class WeightService extends ChangeNotifier {
   WeightService() {
     init();
   }
 
-  static const _entriesKey = 'weightme_entries_v1';
-  static const _profileKey = 'weightme_profile_v1';
+  static const _legacyEntriesKey = 'weightme_entries_v1';
+  static const _legacyProfileKey = 'weightme_profile_v1';
+
+  final DatabaseService _db = DatabaseService();
 
   List<WeightEntry> _entries = [];
   UserProfile _profile = const UserProfile();
@@ -21,26 +27,45 @@ class WeightService extends ChangeNotifier {
   UserProfile get profile => _profile;
 
   Future<void> init() async {
-    final prefs = await SharedPreferences.getInstance();
-    final profileJsonStr = prefs.getString(_profileKey);
-    if (profileJsonStr != null) {
-      try {
-        _profile = UserProfile.fromJson(jsonDecode(profileJsonStr) as Map<String, dynamic>);
-      } catch (_) {}
-    }
+    final dbProfile = await _db.getProfile();
+    final dbEntries = await _db.getEntries();
 
-    final entriesJsonStr = prefs.getString(_entriesKey);
-    if (entriesJsonStr != null) {
-      try {
-        final List<dynamic> jsonList = jsonDecode(entriesJsonStr) as List<dynamic>;
-        _entries = jsonList
-            .map((e) => WeightEntry.fromJson(e as Map<String, dynamic>))
-            .toList();
-      } catch (_) {}
+    if (dbProfile != null || dbEntries.isNotEmpty) {
+      _profile = dbProfile ?? const UserProfile();
+      _entries = dbEntries;
     } else {
-      // Cargar datos iniciales de demostración para el MVP
-      _entries = _generateInitialEntries();
-      await _saveEntries();
+      // Intentar migrar desde SharedPreferences legados si existen
+      final prefs = await SharedPreferences.getInstance();
+      final profileJsonStr = prefs.getString(_legacyProfileKey);
+      final entriesJsonStr = prefs.getString(_legacyEntriesKey);
+
+      if (profileJsonStr != null || entriesJsonStr != null) {
+        if (profileJsonStr != null) {
+          try {
+            _profile = UserProfile.fromJson(jsonDecode(profileJsonStr) as Map<String, dynamic>);
+          } catch (_) {}
+        }
+        if (entriesJsonStr != null) {
+          try {
+            final List<dynamic> jsonList = jsonDecode(entriesJsonStr) as List<dynamic>;
+            _entries = jsonList
+                .map((e) => WeightEntry.fromJson(e as Map<String, dynamic>))
+                .toList();
+          } catch (_) {}
+        }
+      } else {
+        // Cargar datos iniciales de demostración
+        _profile = const UserProfile();
+        _entries = _generateInitialEntries();
+      }
+
+      // Guardar en la nueva base de datos SQLite
+      await _db.saveProfile(_profile);
+      await _db.insertEntries(_entries);
+
+      // Limpiar SharedPreferences antiguos
+      await prefs.remove(_legacyProfileKey);
+      await prefs.remove(_legacyEntriesKey);
     }
 
     _sortEntriesAndCalculateDeltas();
@@ -62,21 +87,21 @@ class WeightService extends ChangeNotifier {
 
     _entries.add(newEntry);
     _sortEntriesAndCalculateDeltas();
-    await _saveEntries();
+    await _db.insertEntry(newEntry);
     notifyListeners();
   }
 
   Future<void> deleteEntry(String id) async {
     _entries.removeWhere((entry) => entry.id == id);
     _sortEntriesAndCalculateDeltas();
-    await _saveEntries();
+    await _db.deleteEntry(id);
     notifyListeners();
   }
 
   Future<void> restoreEntry(WeightEntry entry) async {
     _entries.add(entry);
     _sortEntriesAndCalculateDeltas();
-    await _saveEntries();
+    await _db.insertEntry(entry);
     notifyListeners();
   }
 
@@ -88,23 +113,94 @@ class WeightService extends ChangeNotifier {
   }) async {
     final index = _entries.indexWhere((entry) => entry.id == id);
     if (index != -1) {
-      _entries[index] = _entries[index].copyWith(
+      final updated = _entries[index].copyWith(
         weightKg: weightKg,
         date: date ?? _entries[index].date,
         note: note,
       );
+      _entries[index] = updated;
       _sortEntriesAndCalculateDeltas();
-      await _saveEntries();
+      await _db.updateEntry(updated);
       notifyListeners();
     }
   }
 
   Future<void> updateProfile(UserProfile newProfile) async {
     _profile = newProfile;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_profileKey, jsonEncode(_profile.toJson()));
+    await _db.saveProfile(_profile);
     notifyListeners();
   }
+
+  // --- EXPORTAR E IMPORTAR COPIA DE SEGURIDAD (JSON) ---
+
+  Future<String?> exportBackupFile() async {
+    final backupMap = {
+      'version': 1,
+      'exportedAt': DateTime.now().toIso8601String(),
+      'profile': _profile.toJson(),
+      'entries': _entries.map((e) => e.toJson()).toList(),
+    };
+
+    final jsonString = const JsonEncoder.withIndent('  ').convert(backupMap);
+    final bytes = Uint8List.fromList(utf8.encode(jsonString));
+
+    final result = await FilePickerPlatform.instance.saveFile(
+      dialogTitle: 'Guardar copia de seguridad',
+      fileName: 'weightme_backup.json',
+      mimeType: 'application/json',
+      bytes: bytes,
+    );
+
+    return result?.toString();
+  }
+
+  Future<bool> importBackupFromFile() async {
+    final files = await FilePickerPlatform.instance.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+    );
+
+    if (files.isEmpty) {
+      return false; // El usuario canceló la selección
+    }
+
+    final file = files.first;
+    String content = '';
+
+    if (file.path != null && file.path!.isNotEmpty) {
+      content = await File(file.path!).readAsString();
+    }
+
+    if (content.isEmpty) return false;
+
+    try {
+      final dynamic decoded = jsonDecode(content);
+      if (decoded is! Map<String, dynamic>) return false;
+
+      final profileJson = decoded['profile'] as Map<String, dynamic>?;
+      final entriesJson = decoded['entries'] as List<dynamic>?;
+
+      if (profileJson == null || entriesJson == null) return false;
+
+      final importedProfile = UserProfile.fromJson(profileJson);
+      final importedEntries = entriesJson
+          .map((e) => WeightEntry.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+      await _db.replaceAllData(importedProfile, importedEntries);
+
+      _profile = importedProfile;
+      _entries = importedEntries;
+      _sortEntriesAndCalculateDeltas();
+
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // --- MÉTODOS Y PROPIEDADES DE UNIDADES Y CÁLCULO ---
 
   static const double kgToLbsRatio = 2.20462262185;
 
@@ -140,7 +236,7 @@ class WeightService extends ChangeNotifier {
     if (_entries.length < 2) return 0.0;
     final now = DateTime.now();
     final weekAgo = now.subtract(const Duration(days: 7));
-    
+
     WeightEntry? oldestInWeek;
     for (final entry in _entries.reversed) {
       if (entry.date.isAfter(weekAgo) || entry.date.isAtSameMomentAs(weekAgo)) {
@@ -200,12 +296,6 @@ class WeightService extends ChangeNotifier {
         _entries[i] = _entries[i].copyWith(delta: double.parse(delta.toStringAsFixed(1)));
       }
     }
-  }
-
-  Future<void> _saveEntries() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonList = _entries.map((e) => e.toJson()).toList();
-    await prefs.setString(_entriesKey, jsonEncode(jsonList));
   }
 
   static List<WeightEntry> _generateInitialEntries() {

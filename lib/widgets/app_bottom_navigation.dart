@@ -87,7 +87,7 @@ class _NavigationIcon extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
             decoration: BoxDecoration(
               color: selected ? AppColors.primary.withValues(alpha: .15) : Colors.transparent,
               borderRadius: AppRadius.pill,
