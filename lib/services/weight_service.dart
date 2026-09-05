@@ -54,9 +54,9 @@ class WeightService extends ChangeNotifier {
           } catch (_) {}
         }
       } else {
-        // Cargar datos iniciales de demostración
+        // Primera ejecución: perfil y lista vacíos
         _profile = const UserProfile();
-        _entries = _generateInitialEntries();
+        _entries = [];
       }
 
       // Guardar en la nueva base de datos SQLite
@@ -298,52 +298,5 @@ class WeightService extends ChangeNotifier {
     }
   }
 
-  static List<WeightEntry> _generateInitialEntries() {
-    final now = DateTime.now();
-    return [
-      WeightEntry(
-        id: '1',
-        date: now.subtract(const Duration(hours: 2)),
-        weightKg: 75.4,
-        delta: -0.8,
-        note: 'Desayuno ligero',
-      ),
-      WeightEntry(
-        id: '2',
-        date: now.subtract(const Duration(days: 7)),
-        weightKg: 76.2,
-        delta: -0.5,
-      ),
-      WeightEntry(
-        id: '3',
-        date: now.subtract(const Duration(days: 14)),
-        weightKg: 76.7,
-        delta: -0.9,
-      ),
-      WeightEntry(
-        id: '4',
-        date: now.subtract(const Duration(days: 21)),
-        weightKg: 77.6,
-        delta: -0.7,
-      ),
-      WeightEntry(
-        id: '5',
-        date: now.subtract(const Duration(days: 30)),
-        weightKg: 78.3,
-        delta: -1.2,
-      ),
-      WeightEntry(
-        id: '6',
-        date: now.subtract(const Duration(days: 60)),
-        weightKg: 81.5,
-        delta: -1.5,
-      ),
-      WeightEntry(
-        id: '7',
-        date: now.subtract(const Duration(days: 90)),
-        weightKg: 85.2,
-        delta: 0.0,
-      ),
-    ];
-  }
+
 }

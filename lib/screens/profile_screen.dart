@@ -26,7 +26,7 @@ class ProfileScreen extends StatelessWidget {
         ),
         child: Column(
           children: [
-            const _ProfileHeader(),
+            _ProfileHeader(weightService: weightService),
             const SizedBox(height: AppSpacing.lg),
             _WeightGoalsCard(weightService: weightService),
             const SizedBox(height: AppSpacing.md),
@@ -52,10 +52,65 @@ class ProfileScreen extends StatelessWidget {
 }
 
 class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader();
+  const _ProfileHeader({required this.weightService});
+
+  final WeightService weightService;
+
+  void _editName(BuildContext context) {
+    final controller = TextEditingController(text: weightService.profile.name);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.surfaceHigh,
+          title: Text('Editar nombre', style: AppTypography.titleMedium),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(
+              hintText: 'Tu nombre',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final name = controller.text.trim();
+                if (name.isNotEmpty) {
+                  weightService.updateProfile(
+                    weightService.profile.copyWith(name: name),
+                  );
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('Guardar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _getInitials(String name) {
+    if (name == 'Anónimo' || name.isEmpty) return '';
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return parts[0][0].toUpperCase();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final name = weightService.profile.name;
+    final initials = _getInitials(name);
+
     return Column(
       children: [
         Stack(
@@ -66,6 +121,7 @@ class _ProfileHeader extends StatelessWidget {
               height: 128,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
+                color: AppColors.surfaceHigh,
                 border: Border.all(color: AppColors.surfaceHighest, width: 2),
                 boxShadow: [
                   BoxShadow(
@@ -74,12 +130,21 @@ class _ProfileHeader extends StatelessWidget {
                     spreadRadius: 2,
                   ),
                 ],
-                image: const DecorationImage(
-                  image: NetworkImage(
-                    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop',
-                  ),
-                  fit: BoxFit.cover,
-                ),
+              ),
+              child: Center(
+                child: initials.isNotEmpty
+                    ? Text(
+                        initials,
+                        style: AppTypography.displayLarge.copyWith(
+                          fontSize: 44,
+                          color: AppColors.primary,
+                        ),
+                      )
+                    : const Icon(
+                        Icons.person_rounded,
+                        size: 56,
+                        color: AppColors.primary,
+                      ),
               ),
             ),
             Positioned(
@@ -90,7 +155,7 @@ class _ProfileHeader extends StatelessWidget {
                 shape: const CircleBorder(),
                 elevation: 4,
                 child: IconButton(
-                  onPressed: () {},
+                  onPressed: () => _editName(context),
                   icon: const Icon(Icons.edit, size: 16, color: AppColors.primary),
                   constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                   padding: EdgeInsets.zero,
@@ -100,9 +165,10 @@ class _ProfileHeader extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.md),
-        Text('Alex Mercer', style: AppTypography.headlineLarge),
-        const SizedBox(height: AppSpacing.xxs),
-        const Text('Activo desde oct. 2023', style: AppTypography.bodySmall),
+        GestureDetector(
+          onTap: () => _editName(context),
+          child: Text(name, style: AppTypography.headlineLarge),
+        ),
       ],
     );
   }
@@ -115,7 +181,9 @@ class _WeightGoalsCard extends StatelessWidget {
 
   void _editTargetWeight(BuildContext context) {
     final controller = TextEditingController(
-      text: weightService.profile.targetWeight.toStringAsFixed(1),
+      text: weightService.profile.targetWeight > 0
+          ? weightService.profile.targetWeight.toStringAsFixed(1)
+          : '',
     );
 
     showDialog(
@@ -129,6 +197,7 @@ class _WeightGoalsCard extends StatelessWidget {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             autofocus: true,
             decoration: InputDecoration(
+              hintText: '0.0',
               suffixText: weightService.profile.unit,
               border: const OutlineInputBorder(),
             ),
@@ -144,6 +213,52 @@ class _WeightGoalsCard extends StatelessWidget {
                 if (val != null && val > 0) {
                   weightService.updateProfile(
                     weightService.profile.copyWith(targetWeight: val),
+                  );
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('Guardar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _editStartingWeight(BuildContext context) {
+    final controller = TextEditingController(
+      text: weightService.profile.startingWeight > 0
+          ? weightService.profile.startingWeight.toStringAsFixed(1)
+          : '',
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.surfaceHigh,
+          title: Text('Editar Peso Inicial', style: AppTypography.titleMedium),
+          content: TextField(
+            controller: controller,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: '0.0',
+              suffixText: weightService.profile.unit,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final val = double.tryParse(controller.text.replaceAll(',', '.'));
+                if (val != null && val > 0) {
+                  weightService.updateProfile(
+                    weightService.profile.copyWith(startingWeight: val),
                   );
                 }
                 Navigator.pop(context);
@@ -187,13 +302,18 @@ class _WeightGoalsCard extends StatelessWidget {
               final isSmall = constraints.maxWidth < 400;
               final child1 = _GoalBox(
                 label: 'PESO INICIAL',
-                value: profile.startingWeight.toStringAsFixed(1),
+                value: profile.startingWeight > 0
+                    ? profile.startingWeight.toStringAsFixed(1)
+                    : '—',
                 unit: profile.unit,
                 isHighlighted: false,
+                onEdit: () => _editStartingWeight(context),
               );
               final child2 = _GoalBox(
                 label: 'PESO META',
-                value: profile.targetWeight.toStringAsFixed(1),
+                value: profile.targetWeight > 0
+                    ? profile.targetWeight.toStringAsFixed(1)
+                    : '—',
                 unit: profile.unit,
                 isHighlighted: true,
                 onEdit: () => _editTargetWeight(context),

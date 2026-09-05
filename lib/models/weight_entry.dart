@@ -73,9 +73,9 @@ class MonthEntries {
 
 class UserProfile {
   const UserProfile({
-    this.name = 'Alex Mercer',
-    this.startingWeight = 85.2,
-    this.targetWeight = 75.0,
+    this.name = 'Anónimo',
+    this.startingWeight = 0.0,
+    this.targetWeight = 0.0,
     this.unit = 'kg',
     this.dailyReminders = true,
   });
@@ -95,9 +95,9 @@ class UserProfile {
       };
 
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
-        name: json['name'] as String? ?? 'Alex Mercer',
-        startingWeight: (json['startingWeight'] as num?)?.toDouble() ?? 85.2,
-        targetWeight: (json['targetWeight'] as num?)?.toDouble() ?? 75.0,
+        name: json['name'] as String? ?? 'Anónimo',
+        startingWeight: (json['startingWeight'] as num?)?.toDouble() ?? 0.0,
+        targetWeight: (json['targetWeight'] as num?)?.toDouble() ?? 0.0,
         unit: json['unit'] as String? ?? 'kg',
         dailyReminders: json['dailyReminders'] as bool? ?? true,
       );
