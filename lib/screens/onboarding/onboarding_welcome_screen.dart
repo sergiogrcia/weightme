@@ -234,30 +234,7 @@ class OnboardingWelcomeScreen extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
 
-        // Step Progress Bar (50% filled - Paso 2 de 4)
-        Container(
-          width: double.infinity,
-          height: 6,
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: FractionallySizedBox(
-              widthFactor: 0.40,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF6366F1), AppColors.primary],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 6),
+        // Step Labels (moved above the progress bar to match OnboardingNameScreen)
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -280,6 +257,31 @@ class OnboardingWelcomeScreen extends StatelessWidget {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 8),
+
+        // Step Progress Bar (50% filled - Paso 2 de 4)
+        Container(
+          width: double.infinity,
+          height: 6,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: FractionallySizedBox(
+              widthFactor: 0.40,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6366F1), AppColors.primary],
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
       ],
     );

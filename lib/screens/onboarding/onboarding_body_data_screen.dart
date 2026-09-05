@@ -330,9 +330,37 @@ class _OnboardingBodyDataScreenState extends State<OnboardingBodyDataScreen> {
             const SizedBox(width: 36),
           ],
         ),
+
         const SizedBox(height: AppSpacing.sm),
 
-        // Step Progress Bar (75% filled - Paso 3 de 4)
+        // PASO 3 DE 4 + DATOS CORPORALES
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'PASO 3 DE 4',
+              style: AppTypography.labelCaps.copyWith(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF8E9BB5),
+                letterSpacing: 0.5,
+              ),
+            ),
+            Text(
+              'DATOS CORPORALES',
+              style: AppTypography.labelCaps.copyWith(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 6),
+
+        // Barra de progreso debajo
         Container(
           width: double.infinity,
           height: 6,
@@ -358,30 +386,6 @@ class _OnboardingBodyDataScreenState extends State<OnboardingBodyDataScreen> {
               ),
             ),
           ),
-        ),
-        const SizedBox(height: 6),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'PASO 3 DE 4',
-              style: AppTypography.labelCaps.copyWith(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF8E9BB5),
-                letterSpacing: 0.5,
-              ),
-            ),
-            Text(
-              'DATOS CORPORALES',
-              style: AppTypography.labelCaps.copyWith(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.primary,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ],
         ),
       ],
     );

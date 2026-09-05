@@ -310,9 +310,37 @@ class _OnboardingGoalScreenState extends State<OnboardingGoalScreen> {
             const SizedBox(width: 36),
           ],
         ),
+
         const SizedBox(height: AppSpacing.sm),
 
-        // Step Progress Bar (100% filled - Paso 5 de 5)
+        // Paso 5 de 5 + Ritmo y objetivo
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'PASO 5 DE 5',
+              style: AppTypography.labelCaps.copyWith(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF94A3B8),
+                letterSpacing: 0.5,
+              ),
+            ),
+            Text(
+              'RITMO Y OBJETIVO',
+              style: AppTypography.labelCaps.copyWith(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 6),
+
+        // Barra de progreso - Paso 5 de 5
         Container(
           width: double.infinity,
           height: 6,
@@ -340,30 +368,6 @@ class _OnboardingGoalScreenState extends State<OnboardingGoalScreen> {
               ),
             ),
           ),
-        ),
-        const SizedBox(height: 6),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'PASO 5 DE 5',
-              style: AppTypography.labelCaps.copyWith(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF94A3B8),
-                letterSpacing: 0.5,
-              ),
-            ),
-            Text(
-              'RITMO Y OBJETIVO',
-              style: AppTypography.labelCaps.copyWith(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.primary,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ],
         ),
       ],
     );

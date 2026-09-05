@@ -208,6 +208,7 @@ class _OnboardingActivityLevelScreenState
                 ),
               ),
             ),
+
             Row(
               children: [
                 Container(
@@ -236,12 +237,41 @@ class _OnboardingActivityLevelScreenState
                 ),
               ],
             ),
+
             const SizedBox(width: 36),
           ],
         ),
+
         const SizedBox(height: AppSpacing.sm),
 
-        // Progress Bar (100% filled - Paso 4 de 4)
+        // Paso 4 de 4 + Nivel de actividad
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'PASO 4 DE 4',
+              style: AppTypography.labelCaps.copyWith(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF64748B),
+                letterSpacing: 0.5,
+              ),
+            ),
+            Text(
+              'NIVEL DE ACTIVIDAD',
+              style: AppTypography.labelCaps.copyWith(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFFCBD5E1),
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 6),
+
+        // Barra de progreso
         Container(
           width: double.infinity,
           height: 6,
@@ -269,30 +299,6 @@ class _OnboardingActivityLevelScreenState
               ),
             ),
           ),
-        ),
-        const SizedBox(height: 6),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'PASO 4 DE 4',
-              style: AppTypography.labelCaps.copyWith(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF64748B),
-                letterSpacing: 0.5,
-              ),
-            ),
-            Text(
-              'NIVEL DE ACTIVIDAD',
-              style: AppTypography.labelCaps.copyWith(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFFCBD5E1),
-                letterSpacing: 0.5,
-              ),
-            ),
-          ],
         ),
       ],
     );
