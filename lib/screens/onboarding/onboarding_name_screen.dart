@@ -9,14 +9,12 @@ class OnboardingNameScreen extends StatefulWidget {
   const OnboardingNameScreen({
     this.initialName = '',
     this.onContinue,
-    this.onSkip,
     this.onPreferNotToSay,
     super.key,
   });
 
   final String initialName;
   final ValueChanged<String>? onContinue;
-  final VoidCallback? onSkip;
   final VoidCallback? onPreferNotToSay;
 
   @override
@@ -168,7 +166,9 @@ class _OnboardingNameScreenState extends State<OnboardingNameScreen> {
                                   'Puedes cambiarlo o añadirlo más adelante desde tu perfil.',
                                   style: AppTypography.bodySmall.copyWith(
                                     fontSize: 12,
-                                    color: const Color(0xFF94A3B8).withValues(alpha: 0.9),
+                                    color: const Color(
+                                      0xFF94A3B8,
+                                    ).withValues(alpha: 0.9),
                                   ),
                                 ),
                               ),
@@ -196,62 +196,36 @@ class _OnboardingNameScreenState extends State<OnboardingNameScreen> {
 
   Widget _buildHeader(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: AppColors.primaryContainer,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 4,
-                  ),
-                ],
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: AppColors.primaryContainer,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 4,
               ),
-              child: const Icon(
-                Icons.show_chart_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 10),
-            const Text(
-              'WEIGHTME',
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontWeight: FontWeight.w800,
-                fontSize: 14,
-                letterSpacing: 1.2,
-                color: Colors.white,
-              ),
-            ),
-          ],
+            ],
+          ),
+          child: const Icon(
+            Icons.show_chart_rounded,
+            color: Colors.white,
+            size: 20,
+          ),
         ),
-        InkWell(
-          onTap: widget.onSkip,
-          borderRadius: BorderRadius.circular(999),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-            ),
-            child: const Text(
-              'Saltar',
-              style: TextStyle(
-                fontFamily: AppTypography.fontFamily,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF94A3B8),
-              ),
-            ),
+        const SizedBox(width: 10),
+        const Text(
+          'WEIGHTME',
+          style: TextStyle(
+            fontFamily: AppTypography.fontFamily,
+            fontWeight: FontWeight.w800,
+            fontSize: 14,
+            letterSpacing: 1.2,
+            color: Colors.white,
           ),
         ),
       ],
@@ -303,10 +277,7 @@ class _OnboardingNameScreenState extends State<OnboardingNameScreen> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(999),
                   gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF6366F1),
-                      AppColors.primary,
-                    ],
+                    colors: [Color(0xFF6366F1), AppColors.primary],
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -340,10 +311,7 @@ class _OnboardingNameScreenState extends State<OnboardingNameScreen> {
         ],
       ),
       alignment: Alignment.center,
-      child: const Text(
-        '👋',
-        style: TextStyle(fontSize: 26),
-      ),
+      child: const Text('👋', style: TextStyle(fontSize: 26)),
     );
   }
 
@@ -470,9 +438,7 @@ class _OnboardingNameScreenState extends State<OnboardingNameScreen> {
               foregroundColor: AppColors.background,
               elevation: 0,
               shadowColor: AppColors.primary.withValues(alpha: 0.25),
-              shape: RoundedRectangleBorder(
-                borderRadius: AppRadius.pill,
-              ),
+              shape: RoundedRectangleBorder(borderRadius: AppRadius.pill),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
