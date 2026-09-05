@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/weight_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
 class WeightEvolutionChart extends StatelessWidget {
@@ -19,28 +20,43 @@ class WeightEvolutionChart extends StatelessWidget {
     final entries = _getFilteredEntries();
     final unitStr = weightService?.profile.unit ?? 'kg';
 
+    if (entries.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.show_chart_rounded, size: 48, color: AppColors.textSecondary.withValues(alpha: .4)),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Sin datos todavía',
+              style: AppTypography.titleMedium.copyWith(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: AppSpacing.xxs),
+            Text(
+              'Registra tu peso para ver la evolución.',
+              style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary.withValues(alpha: .7)),
+            ),
+          ],
+        ),
+      );
+    }
+
     final double minWeight;
     final double maxWeight;
 
-    if (entries.isEmpty) {
-      final base = weightService?.currentDisplayWeight ?? 75.0;
-      minWeight = base - 2.0;
-      maxWeight = base + 2.0;
+    var min = entries.first.weightVal;
+    var max = entries.first.weightVal;
+    for (final e in entries) {
+      if (e.weightVal < min) min = e.weightVal;
+      if (e.weightVal > max) max = e.weightVal;
+    }
+    if ((max - min).abs() < 0.1) {
+      minWeight = (min - 2.0).clamp(0.0, double.infinity);
+      maxWeight = max + 2.0;
     } else {
-      var min = entries.first.weightVal;
-      var max = entries.first.weightVal;
-      for (final e in entries) {
-        if (e.weightVal < min) min = e.weightVal;
-        if (e.weightVal > max) max = e.weightVal;
-      }
-      if ((max - min).abs() < 0.1) {
-        minWeight = min - 2.0;
-        maxWeight = max + 2.0;
-      } else {
-        final padding = (max - min) * 0.15;
-        minWeight = min - padding;
-        maxWeight = max + padding;
-      }
+      final padding = (max - min) * 0.15;
+      minWeight = (min - padding).clamp(0.0, double.infinity);
+      maxWeight = max + padding;
     }
 
     final topLabel = '${maxWeight.toStringAsFixed(1)} $unitStr';
