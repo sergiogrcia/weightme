@@ -245,7 +245,7 @@ class OnboardingWelcomeScreen extends StatelessWidget {
           child: Align(
             alignment: Alignment.centerLeft,
             child: FractionallySizedBox(
-              widthFactor: 0.50,
+              widthFactor: 0.40,
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(999),

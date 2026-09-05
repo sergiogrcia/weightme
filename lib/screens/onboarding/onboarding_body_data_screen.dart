@@ -343,7 +343,7 @@ class _OnboardingBodyDataScreenState extends State<OnboardingBodyDataScreen> {
           child: Align(
             alignment: Alignment.centerLeft,
             child: FractionallySizedBox(
-              widthFactor: 0.75,
+              widthFactor: 0.60,
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(999),

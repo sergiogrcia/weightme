@@ -252,7 +252,7 @@ class _OnboardingActivityLevelScreenState
           child: Align(
             alignment: Alignment.centerLeft,
             child: FractionallySizedBox(
-              widthFactor: 1.0,
+              widthFactor: 0.80,
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(999),

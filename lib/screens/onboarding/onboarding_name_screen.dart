@@ -272,7 +272,7 @@ class _OnboardingNameScreenState extends State<OnboardingNameScreen> {
           child: Align(
             alignment: Alignment.centerLeft,
             child: FractionallySizedBox(
-              widthFactor: 0.25,
+              widthFactor: 0.20,
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(999),
