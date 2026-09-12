@@ -39,9 +39,7 @@ class AppBottomNavigation extends StatelessWidget {
               selected: currentIndex == 1,
               onPressed: () => onDestinationSelected(1),
             ),
-            _NavigationIcon(
-              icon: Icons.add_circle_outline_rounded,
-              label: 'Añadir',
+            _AddNavigationIcon(
               selected: currentIndex == 2,
               onPressed: () => onDestinationSelected(2),
             ),
@@ -56,6 +54,59 @@ class AppBottomNavigation extends StatelessWidget {
               label: 'Perfil',
               selected: currentIndex == 4,
               onPressed: () => onDestinationSelected(4),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AddNavigationIcon extends StatelessWidget {
+  const _AddNavigationIcon({required this.selected, required this.onPressed});
+
+  final bool selected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    const double iconCenterY = 21.0;
+    const double circleSize = 50.0;
+
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: const BorderRadius.all(AppRadius.medium),
+      child: SizedBox(
+        width: 60,
+        height: 56,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.topCenter,
+          children: [
+            Positioned(
+              top: iconCenterY - (circleSize / 2),
+              child: Container(
+                width: circleSize,
+                height: circleSize,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: selected
+                          ? AppColors.primary.withValues(alpha: .5)
+                          : AppColors.primary.withValues(alpha: .25),
+                      blurRadius: selected ? 12 : 6,
+                      spreadRadius: selected ? 1 : 0,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.add_rounded,
+                  color: Color(0xFF060060),
+                  size: 28,
+                ),
+              ),
             ),
           ],
         ),
