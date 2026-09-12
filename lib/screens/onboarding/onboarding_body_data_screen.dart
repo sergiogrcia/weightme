@@ -338,7 +338,7 @@ class _OnboardingBodyDataScreenState extends State<OnboardingBodyDataScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'PASO 3 DE 5',
+              'PASO 3 DE 6',
               style: AppTypography.labelCaps.copyWith(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
@@ -371,7 +371,7 @@ class _OnboardingBodyDataScreenState extends State<OnboardingBodyDataScreen> {
           child: Align(
             alignment: Alignment.centerLeft,
             child: FractionallySizedBox(
-              widthFactor: 0.60,
+              widthFactor: 0.5001,
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(999),

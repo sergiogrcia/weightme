@@ -318,7 +318,7 @@ class _OnboardingGoalScreenState extends State<OnboardingGoalScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'PASO 5 DE 5',
+              'PASO 5 DE 6',
               style: AppTypography.labelCaps.copyWith(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
@@ -351,7 +351,7 @@ class _OnboardingGoalScreenState extends State<OnboardingGoalScreen> {
           child: Align(
             alignment: Alignment.centerLeft,
             child: FractionallySizedBox(
-              widthFactor: 1.0,
+              widthFactor: 0.8334,
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(999),

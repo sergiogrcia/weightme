@@ -239,7 +239,7 @@ class OnboardingWelcomeScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'PASO 2 DE 5',
+              'PASO 2 DE 6',
               style: AppTypography.labelCaps.copyWith(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
@@ -271,7 +271,7 @@ class OnboardingWelcomeScreen extends StatelessWidget {
           child: Align(
             alignment: Alignment.centerLeft,
             child: FractionallySizedBox(
-              widthFactor: 0.40,
+              widthFactor: 0.3334,
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(999),
