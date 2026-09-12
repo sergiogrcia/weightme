@@ -4,6 +4,7 @@ import '../services/weight_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/app_bottom_navigation.dart';
 import 'add_weight_screen.dart';
+import 'calculator_screen.dart';
 import 'history_screen.dart';
 import 'home_screen.dart';
 import 'onboarding/onboarding_flow_screen.dart';
@@ -27,7 +28,7 @@ class _AppShellState extends State<AppShell> {
   }
 
   void _selectDestination(int index) {
-    if (index >= 0 && index <= 3) {
+    if (index >= 0 && index <= 4) {
       setState(() => _currentIndex = index);
     }
   }
@@ -72,6 +73,7 @@ class _AppShellState extends State<AppShell> {
                 weightService: _weightService,
                 onCancel: () => _selectDestination(0),
               ),
+              CalculatorScreen(weightService: _weightService),
               ProfileScreen(weightService: _weightService),
             ],
           ),

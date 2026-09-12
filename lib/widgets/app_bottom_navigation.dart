@@ -46,10 +46,16 @@ class AppBottomNavigation extends StatelessWidget {
               onPressed: () => onDestinationSelected(2),
             ),
             _NavigationIcon(
-              icon: Icons.person_outline_rounded,
-              label: 'Perfil',
+              icon: Icons.calculate_outlined,
+              label: 'Calculadora',
               selected: currentIndex == 3,
               onPressed: () => onDestinationSelected(3),
+            ),
+            _NavigationIcon(
+              icon: Icons.person_outline_rounded,
+              label: 'Perfil',
+              selected: currentIndex == 4,
+              onPressed: () => onDestinationSelected(4),
             ),
           ],
         ),
@@ -77,7 +83,7 @@ class _NavigationIcon extends StatelessWidget {
       onPressed: onPressed,
       style: TextButton.styleFrom(
         foregroundColor: selected ? AppColors.primary : AppColors.textSecondary,
-        fixedSize: const Size(72, 56),
+        fixedSize: const Size(60, 56),
         padding: EdgeInsets.zero,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(AppRadius.medium),
@@ -87,9 +93,11 @@ class _NavigationIcon extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
             decoration: BoxDecoration(
-              color: selected ? AppColors.primary.withValues(alpha: .15) : Colors.transparent,
+              color: selected
+                  ? AppColors.primary.withValues(alpha: .15)
+                  : Colors.transparent,
               borderRadius: AppRadius.pill,
             ),
             child: Icon(icon, size: 21),
@@ -97,7 +105,10 @@ class _NavigationIcon extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(fontSize: 10, fontWeight: selected ? FontWeight.w600 : FontWeight.w400),
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+            ),
           ),
         ],
       ),
