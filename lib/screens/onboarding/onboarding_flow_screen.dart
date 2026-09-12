@@ -5,6 +5,7 @@ import 'onboarding_activity_level_screen.dart';
 import 'onboarding_body_data_screen.dart';
 import 'onboarding_goal_screen.dart';
 import 'onboarding_loading_screen.dart';
+import 'onboarding_macros_screen.dart';
 import 'onboarding_name_screen.dart';
 import 'onboarding_summary_screen.dart';
 import 'onboarding_welcome_screen.dart';
@@ -16,6 +17,7 @@ enum OnboardingStep {
   activityLevel,
   goal,
   loading,
+  macros,
   summary,
 }
 
@@ -51,6 +53,11 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     weeklyRateKg: -0.50,
     estimatedDailyCalories: -550,
   );
+  OnboardingMacrosData _macrosData = const OnboardingMacrosData(
+    proteinPct: 35,
+    carbsPct: 40,
+    fatPct: 25,
+  );
 
   void _goToStep(OnboardingStep step) {
     setState(() => _currentStep = step);
@@ -78,6 +85,31 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     }
 
     widget.onCompleted();
+  }
+
+  /// Computes target daily calories using the same BMR/TDEE logic as the summary screen.
+  int _computeTargetCalories() {
+    final w = _bodyData.weightKg;
+    final h = _bodyData.heightCm;
+    final a = _bodyData.age.toDouble();
+    final double bmr = _bodyData.sex == 'mujer'
+        ? 10 * w + 6.25 * h - 5 * a - 161
+        : 10 * w + 6.25 * h - 5 * a + 5;
+
+    final double multiplier;
+    switch (_activityLevel) {
+      case 'sedentario':
+        multiplier = 1.2;
+      case 'activo':
+        multiplier = 1.55;
+      case 'muy_activo':
+        multiplier = 1.725;
+      default:
+        multiplier = 1.375; // ligeramente_activo
+    }
+
+    final tdee = bmr * multiplier;
+    return (tdee + _goalData.estimatedDailyCalories).clamp(1200.0, 5000.0).round();
   }
 
   @override
@@ -125,9 +157,19 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
           initialStepIndex: _goalData.stepIndex,
           onFinish: (data) {
             _goalData = data;
-            _goToStep(OnboardingStep.loading);
+            _goToStep(OnboardingStep.macros);
           },
           onBack: () => _goToStep(OnboardingStep.activityLevel),
+        );
+
+      case OnboardingStep.macros:
+        return OnboardingMacrosScreen(
+          totalKcal: _computeTargetCalories(),
+          onContinue: (data) {
+            _macrosData = data;
+            _goToStep(OnboardingStep.loading);
+          },
+          onBack: () => _goToStep(OnboardingStep.goal),
         );
 
       case OnboardingStep.loading:
@@ -141,8 +183,9 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
           bodyData: _bodyData,
           goalData: _goalData,
           activityLevel: _activityLevel,
+          macrosData: _macrosData,
           onEnterApp: _handleEnterApp,
-          onBack: () => _goToStep(OnboardingStep.goal),
+          onBack: () => _goToStep(OnboardingStep.macros),
         );
     }
   }

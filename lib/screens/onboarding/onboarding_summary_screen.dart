@@ -6,6 +6,7 @@ import '../../theme/app_spacing.dart';
 import '../../theme/app_typography.dart';
 import 'onboarding_body_data_screen.dart';
 import 'onboarding_goal_screen.dart';
+import 'onboarding_macros_screen.dart';
 
 class OnboardingSummaryScreen extends StatelessWidget {
   const OnboardingSummaryScreen({
@@ -13,6 +14,7 @@ class OnboardingSummaryScreen extends StatelessWidget {
     required this.bodyData,
     required this.goalData,
     required this.activityLevel,
+    this.macrosData,
     this.onEnterApp,
     this.onBack,
     super.key,
@@ -22,6 +24,7 @@ class OnboardingSummaryScreen extends StatelessWidget {
   final OnboardingBodyData bodyData;
   final OnboardingGoalData goalData;
   final String activityLevel;
+  final OnboardingMacrosData? macrosData;
   final VoidCallback? onEnterApp;
   final VoidCallback? onBack;
 
@@ -90,9 +93,10 @@ class OnboardingSummaryScreen extends StatelessWidget {
       5000.0,
     );
 
-    final proteinGrams = ((targetCalories * 0.32) / 4).round();
-    final carbsGrams = ((targetCalories * 0.40) / 4).round();
-    final fatGrams = ((targetCalories * 0.28) / 9).round();
+    final effectiveMacros = macrosData ?? const OnboardingMacrosData(proteinPct: 32, carbsPct: 40, fatPct: 28);
+    final proteinGrams = ((targetCalories * effectiveMacros.proteinPct / 100) / 4).round();
+    final carbsGrams = ((targetCalories * effectiveMacros.carbsPct / 100) / 4).round();
+    final fatGrams = ((targetCalories * effectiveMacros.fatPct / 100) / 9).round();
 
     final projected8WeeksWeight =
         (bodyData.weightKg + (goalData.weeklyRateKg * 8)).clamp(30.0, 300.0);
@@ -154,6 +158,9 @@ class OnboardingSummaryScreen extends StatelessWidget {
                           proteinGrams: proteinGrams,
                           carbsGrams: carbsGrams,
                           fatGrams: fatGrams,
+                          proteinPct: effectiveMacros.proteinPct,
+                          carbsPct: effectiveMacros.carbsPct,
+                          fatPct: effectiveMacros.fatPct,
                         ),
 
                         const SizedBox(height: AppSpacing.md),
@@ -332,6 +339,9 @@ class OnboardingSummaryScreen extends StatelessWidget {
     required int proteinGrams,
     required int carbsGrams,
     required int fatGrams,
+    required int proteinPct,
+    required int carbsPct,
+    required int fatPct,
   }) {
     String tagLabel;
     if (goalData.phase == 'definicion') {
@@ -560,7 +570,7 @@ class OnboardingSummaryScreen extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                  flex: 32,
+                  flex: proteinPct,
                   child: Container(
                     decoration: const BoxDecoration(
                       color: Color(0xFF6366F1),
@@ -573,12 +583,12 @@ class OnboardingSummaryScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 2),
                 Expanded(
-                  flex: 40,
+                  flex: carbsPct,
                   child: Container(color: const Color(0xFF38BDF8)),
                 ),
                 const SizedBox(width: 2),
                 Expanded(
-                  flex: 28,
+                  flex: fatPct,
                   child: Container(
                     decoration: const BoxDecoration(
                       color: Color(0xFFFBBF24),
@@ -602,7 +612,7 @@ class OnboardingSummaryScreen extends StatelessWidget {
                   color: const Color(0xFF6366F1),
                   label: 'Proteína',
                   grams: '${proteinGrams}g',
-                  percent: '(32%)',
+                  percent: '($proteinPct%)',
                 ),
               ),
               Expanded(
@@ -610,7 +620,7 @@ class OnboardingSummaryScreen extends StatelessWidget {
                   color: const Color(0xFF38BDF8),
                   label: 'Carbos',
                   grams: '${carbsGrams}g',
-                  percent: '(40%)',
+                  percent: '($carbsPct%)',
                 ),
               ),
               Expanded(
@@ -618,7 +628,7 @@ class OnboardingSummaryScreen extends StatelessWidget {
                   color: const Color(0xFFFBBF24),
                   label: 'Grasas',
                   grams: '${fatGrams}g',
-                  percent: '(28%)',
+                  percent: '($fatPct%)',
                 ),
               ),
             ],

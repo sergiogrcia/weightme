@@ -996,7 +996,7 @@ class _OnboardingGoalScreenState extends State<OnboardingGoalScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Calcular mi Plan Personalizado',
+                  'Continuar',
                   style: TextStyle(
                     fontFamily: AppTypography.fontFamily,
                     fontSize: 15,
