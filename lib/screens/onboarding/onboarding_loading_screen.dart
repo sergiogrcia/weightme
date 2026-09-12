@@ -619,15 +619,7 @@ class _RadialProgressPainter extends CustomPainter {
         ..strokeWidth = 7
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round
-        ..shader = const SweepGradient(
-          startAngle: -math.pi / 2,
-          endAngle: 3 * math.pi / 2,
-          colors: [
-            Color(0xFF44E2CD),
-            Color(0xFF6366F1),
-            Color(0xFFC0C1FF),
-          ],
-        ).createShader(rect);
+        ..color = const Color(0xFF6366F1);
 
       final sweepAngle = 2 * math.pi * progress;
       canvas.drawArc(
