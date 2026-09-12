@@ -8,10 +8,7 @@ import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
 class CalculatorScreen extends StatefulWidget {
-  const CalculatorScreen({
-    required this.weightService,
-    super.key,
-  });
+  const CalculatorScreen({required this.weightService, super.key});
 
   final WeightService weightService;
 
@@ -28,7 +25,14 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
   late double _activityFactor; // 1.2, 1.375, 1.55, 1.725
   late String _goal; // 'cut', 'maintain', 'bulk'
-  late double _deficit; // 200..800
+  late String _paceOption; // 'conservative', 'optimal', 'aggressive'
+
+  late int _calculatedBmr;
+  late int _calculatedTdee;
+  late int _calculatedTargetCalories;
+  late String _calculatedDeficitBadgeLabel;
+
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -39,18 +43,23 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         ? widget.weightService.currentDisplayWeight
         : 75.4;
 
-    _weightController = TextEditingController(text: initialWeight.toStringAsFixed(1));
+    _weightController = TextEditingController(
+      text: initialWeight.toStringAsFixed(1),
+    );
     _heightController = TextEditingController(text: '178');
     _ageController = TextEditingController(text: '29');
-    _bodyFatController = TextEditingController(text: '16.0');
+    _bodyFatController = TextEditingController(text: '');
 
     _activityFactor = 1.375;
     _goal = 'cut';
-    _deficit = 500;
+    _paceOption = 'optimal';
+
+    _calculateResults();
   }
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _weightController.dispose();
     _heightController.dispose();
     _ageController.dispose();
@@ -58,61 +67,83 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     super.dispose();
   }
 
-  double get _weight => double.tryParse(_weightController.text) ?? 75.4;
-  double get _height => double.tryParse(_heightController.text) ?? 178;
-  double get _age => double.tryParse(_ageController.text) ?? 29;
-  double? get _bodyFat => double.tryParse(_bodyFatController.text);
+  void _calculateResults() {
+    final weight = double.tryParse(_weightController.text) ?? 75.4;
+    final height = double.tryParse(_heightController.text) ?? 178;
+    final age = double.tryParse(_ageController.text) ?? 29;
+    final fat = double.tryParse(_bodyFatController.text);
 
-  int get _bmr {
-    final weight = _weight;
-    final height = _height;
-    final age = _age;
-    final fat = _bodyFat;
-
+    int bmr;
     if (fat != null && fat > 4) {
       final leanMass = weight * (1 - (fat / 100));
-      return (370 + (21.6 * leanMass)).round();
+      bmr = (370 + (21.6 * leanMass)).round();
     } else {
       if (_gender == 'male') {
-        return ((10 * weight) + (6.25 * height) - (5 * age) + 5).round();
+        bmr = ((10 * weight) + (6.25 * height) - (5 * age) + 5).round();
       } else {
-        return ((10 * weight) + (6.25 * height) - (5 * age) - 161).round();
+        bmr = ((10 * weight) + (6.25 * height) - (5 * age) - 161).round();
       }
     }
-  }
 
-  int get _tdee => (_bmr * _activityFactor).round();
+    final tdee = (bmr * _activityFactor).round();
 
-  int get _targetCalories {
-    final tdee = _tdee;
+    double deltaKcal = 0;
     if (_goal == 'cut') {
-      return math.max(1200, tdee - _deficit.round());
+      switch (_paceOption) {
+        case 'conservative':
+          deltaKcal = 300;
+          break;
+        case 'aggressive':
+          deltaKcal = 750;
+          break;
+        case 'optimal':
+        default:
+          deltaKcal = 500;
+          break;
+      }
     } else if (_goal == 'bulk') {
-      return tdee + (_deficit * 0.6).round();
-    } else {
-      return tdee;
+      switch (_paceOption) {
+        case 'conservative':
+          deltaKcal = 200;
+          break;
+        case 'aggressive':
+          deltaKcal = 500;
+          break;
+        case 'optimal':
+        default:
+          deltaKcal = 350;
+          break;
+      }
     }
-  }
 
-  String get _deficitBadgeLabel {
+    int targetCalories;
     if (_goal == 'cut') {
-      return 'Déficit Moderado (-${_deficit.round()} kcal)';
+      targetCalories = math.max(1200, tdee - deltaKcal.round());
     } else if (_goal == 'bulk') {
-      final surplus = (_deficit * 0.6).round();
-      return 'Superávit Magro (+$surplus kcal)';
+      targetCalories = tdee + deltaKcal.round();
     } else {
-      return 'Normocalórica (Mantenimiento)';
+      targetCalories = tdee;
     }
-  }
 
-  double get _weeklyRateKg {
+    String badgeLabel;
+    final paceName = _paceOption == 'conservative'
+        ? 'Conservador'
+        : _paceOption == 'aggressive'
+        ? 'Agresivo'
+        : 'Óptimo';
+
     if (_goal == 'cut') {
-      return -(_deficit * 7 / 7700);
+      badgeLabel = 'Déficit $paceName (-${deltaKcal.round()} kcal)';
     } else if (_goal == 'bulk') {
-      return (_deficit * 0.6 * 7 / 7700);
+      badgeLabel = 'Superávit $paceName (+${deltaKcal.round()} kcal)';
     } else {
-      return 0.0;
+      badgeLabel = 'Normocalórica (Mantenimiento)';
     }
+
+    _calculatedBmr = bmr;
+    _calculatedTdee = tdee;
+    _calculatedTargetCalories = targetCalories;
+    _calculatedDeficitBadgeLabel = badgeLabel;
   }
 
   @override
@@ -128,6 +159,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
             // Main Scrollable Body Content
             Expanded(
               child: SingleChildScrollView(
+                controller: _scrollController,
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.mobileMargin,
                   vertical: AppSpacing.sm,
@@ -229,7 +261,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Simula y recalcula tus calorías diarias, TDEE y gasto energético en tiempo real.',
+          'Calcula tus calorías diarias, TDEE y gasto energético ajustando tus datos.',
           style: AppTypography.bodySmall.copyWith(
             color: AppColors.textSecondary,
             fontSize: 13,
@@ -253,220 +285,202 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           ),
         ],
       ),
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Background ambient glows
-          Positioned(
-            right: -20,
-            top: -20,
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primaryContainer.withValues(alpha: 0.15),
-              ),
+          // Top Badge Tag
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.local_fire_department_rounded,
+                  size: 14,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _calculatedDeficitBadgeLabel,
+                  style: const TextStyle(
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
             ),
           ),
 
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: AppSpacing.sm),
+
+          // Main Target Calories Hero Display
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
             children: [
-              // Top Badge Tag
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.local_fire_department_rounded,
-                      size: 14,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      _deficitBadgeLabel,
-                      style: const TextStyle(
-                        fontFamily: AppTypography.fontFamily,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
+              Text(
+                '$_calculatedTargetCalories',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 48,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primary,
+                  letterSpacing: -1.0,
+                  shadows: [
+                    Shadow(
+                      color: AppColors.primaryContainer.withValues(alpha: 0.4),
+                      blurRadius: 20,
                     ),
                   ],
                 ),
               ),
-
-              const SizedBox(height: AppSpacing.sm),
-
-              // Main Target Calories Hero Display
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '$_targetCalories',
+                  const Text(
+                    'kcal',
                     style: TextStyle(
                       fontFamily: AppTypography.fontFamily,
-                      fontSize: 48,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
-                      letterSpacing: -1.0,
-                      shadows: [
-                        Shadow(
-                          color: AppColors.primaryContainer.withValues(alpha: 0.4),
-                          blurRadius: 20,
-                        ),
-                      ],
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'kcal',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        'recomendadas / día',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 10,
-                          color: AppColors.textSecondary.withValues(alpha: 0.8),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    'recomendadas / día',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 10,
+                      color: AppColors.textSecondary.withValues(alpha: 0.8),
+                    ),
                   ),
                 ],
               ),
+            ],
+          ),
 
-              const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.md),
 
-              // Metric Pills Grid (TDEE & BMR)
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(AppSpacing.sm),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceHigh.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+          // Metric Pills Grid (TDEE & BMR)
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceHigh.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
                         children: [
-                          const Row(
-                            children: [
-                              Icon(
-                                Icons.bolt_rounded,
-                                size: 16,
-                                color: AppColors.secondary,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                'TDEE Estimado',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
+                          Icon(
+                            Icons.bolt_rounded,
+                            size: 16,
+                            color: AppColors.secondary,
                           ),
-                          const SizedBox(height: 4),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Text(
-                                '$_tdee',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              const Text(
-                                'kcal',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
+                          SizedBox(width: 4),
+                          Text(
+                            'TDEE Estimado',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(AppSpacing.sm),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceHigh.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      const SizedBox(height: 4),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
                         children: [
-                          const Row(
-                            children: [
-                              Icon(
-                                Icons.nightlight_round,
-                                size: 16,
-                                color: AppColors.primaryContainer,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                'BMR Basal',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
+                          Text(
+                            '$_calculatedTdee',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
-                          const SizedBox(height: 4),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Text(
-                                '$_bmr',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              const Text(
-                                'kcal',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
+                          const SizedBox(width: 4),
+                          const Text(
+                            'kcal',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ],
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceHigh.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(
+                            Icons.nightlight_round,
+                            size: 16,
+                            color: AppColors.primaryContainer,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'BMR Basal',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            '$_calculatedBmr',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Text(
+                            'kcal',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -520,7 +534,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                       duration: const Duration(milliseconds: 180),
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: _gender == 'male' ? AppColors.primary : Colors.transparent,
+                        color: _gender == 'male'
+                            ? AppColors.primary
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -529,7 +545,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                           Icon(
                             Icons.male_rounded,
                             size: 18,
-                            color: _gender == 'male' ? AppColors.background : AppColors.textSecondary,
+                            color: _gender == 'male'
+                                ? AppColors.background
+                                : AppColors.textSecondary,
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -537,7 +555,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: _gender == 'male' ? AppColors.background : AppColors.textSecondary,
+                              color: _gender == 'male'
+                                  ? AppColors.background
+                                  : AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -552,7 +572,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                       duration: const Duration(milliseconds: 180),
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: _gender == 'female' ? AppColors.primary : Colors.transparent,
+                        color: _gender == 'female'
+                            ? AppColors.primary
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -561,7 +583,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                           Icon(
                             Icons.female_rounded,
                             size: 18,
-                            color: _gender == 'female' ? AppColors.background : AppColors.textSecondary,
+                            color: _gender == 'female'
+                                ? AppColors.background
+                                : AppColors.textSecondary,
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -569,7 +593,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: _gender == 'female' ? AppColors.background : AppColors.textSecondary,
+                              color: _gender == 'female'
+                                  ? AppColors.background
+                                  : AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -624,31 +650,50 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.monitor_weight_outlined,
                       size: 20,
                       color: AppColors.secondary,
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '% Grasa Estimada',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          'Basado en bioimpedancia',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: AppColors.textSecondary,
-                          ),
+                        Row(
+                          children: [
+                            const Text(
+                              '% Grasa',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.15,
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'OPCIONAL',
+                                style: TextStyle(
+                                  fontFamily: AppTypography.fontFamily,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -660,7 +705,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                       width: 48,
                       child: TextField(
                         controller: _bodyFatController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         textAlign: TextAlign.right,
                         onChanged: (_) => setState(() {}),
                         style: const TextStyle(
@@ -669,6 +716,12 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                           color: AppColors.secondary,
                         ),
                         decoration: const InputDecoration(
+                          hintText: '--',
+                          hintStyle: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.normal,
+                          ),
                           isDense: true,
                           contentPadding: EdgeInsets.zero,
                           border: InputBorder.none,
@@ -723,7 +776,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               Expanded(
                 child: TextField(
                   controller: controller,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   onChanged: (_) => setState(() {}),
                   style: const TextStyle(
                     fontSize: 18,
@@ -763,7 +818,11 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         children: [
           const Row(
             children: [
-              Icon(Icons.directions_run_rounded, size: 20, color: AppColors.secondary),
+              Icon(
+                Icons.directions_run_rounded,
+                size: 20,
+                color: AppColors.secondary,
+              ),
               SizedBox(width: 8),
               Text(
                 'Actividad Diaria',
@@ -852,7 +911,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           color: isSelected ? AppColors.surfaceHigh : AppColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.primary.withValues(alpha: 0.6) : Colors.transparent,
+            color: isSelected
+                ? AppColors.primary.withValues(alpha: 0.6)
+                : Colors.transparent,
             width: 1.5,
           ),
           boxShadow: isSelected
@@ -883,7 +944,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -948,87 +1011,94 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
           if (_goal != 'maintain') ...[
             const SizedBox(height: AppSpacing.md),
-
-            // Rate Header & Weekly Value
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Ritmo semanal sugerido',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white,
-                  ),
-                ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      '${_weeklyRateKg >= 0 ? "+" : ""}${_weeklyRateKg.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Text(
-                      'kg / sem',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+            const Text(
+              'Ritmo deseado',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
             ),
-
             const SizedBox(height: 8),
-
-            // Deficit/Surplus Slider
-            SliderTheme(
-              data: SliderThemeData(
-                activeTrackColor: AppColors.primary,
-                inactiveTrackColor: AppColors.surfaceHighest,
-                thumbColor: AppColors.primary,
-                overlayColor: AppColors.primary.withValues(alpha: 0.2),
-                trackHeight: 6,
-              ),
-              child: Slider(
-                value: _deficit,
-                min: 200,
-                max: 800,
-                divisions: 12,
-                onChanged: (val) => setState(() => _deficit = val),
-              ),
-            ),
-
-            // Range Labels
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Row(
               children: [
-                Text(
-                  'Conservador (-0.2kg)',
-                  style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                _buildPaceChip(
+                  keyName: 'conservative',
+                  title: 'Conservador',
+                  subtitle: _goal == 'cut' ? '-0.27 kg/s' : '+0.18 kg/s',
                 ),
-                Text(
-                  'Óptimo (-0.5kg)',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
+                const SizedBox(width: 8),
+                _buildPaceChip(
+                  keyName: 'optimal',
+                  title: 'Óptimo',
+                  subtitle: _goal == 'cut' ? '-0.45 kg/s' : '+0.32 kg/s',
                 ),
-                Text(
-                  'Agresivo (-0.8kg)',
-                  style: TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                const SizedBox(width: 8),
+                _buildPaceChip(
+                  keyName: 'aggressive',
+                  title: 'Agresivo',
+                  subtitle: _goal == 'cut' ? '-0.68 kg/s' : '+0.45 kg/s',
                 ),
               ],
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildPaceChip({
+    required String keyName,
+    required String title,
+    required String subtitle,
+  }) {
+    final isSelected = _paceOption == keyName;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _paceOption = keyName),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : AppColors.surfaceHigh,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : AppColors.surfaceHighest,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Column(
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? AppColors.background : Colors.white,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  color: isSelected
+                      ? AppColors.background.withValues(alpha: 0.8)
+                      : AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1051,7 +1121,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: isSelected ? AppColors.background : AppColors.textSecondary,
+              color: isSelected
+                  ? AppColors.background
+                  : AppColors.textSecondary,
             ),
           ),
         ),
@@ -1065,14 +1137,16 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       height: 52,
       child: ElevatedButton(
         onPressed: () {
-          setState(() {});
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('¡Cálculos nutricionales actualizados!'),
-              duration: Duration(seconds: 2),
-              backgroundColor: AppColors.surfaceHigh,
-            ),
-          );
+          setState(() {
+            _calculateResults();
+          });
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              0,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeOutCubic,
+            );
+          }
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
@@ -1084,7 +1158,11 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.calculate_rounded, size: 22, color: AppColors.background),
+            Icon(
+              Icons.calculate_rounded,
+              size: 22,
+              color: AppColors.background,
+            ),
             SizedBox(width: 8),
             Text(
               'Calcular',
