@@ -32,6 +32,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   late int _calculatedTargetCalories;
   late String _calculatedDeficitBadgeLabel;
 
+  bool _enableBodyFat = false;
+
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -48,7 +50,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     );
     _heightController = TextEditingController(text: '178');
     _ageController = TextEditingController(text: '29');
-    _bodyFatController = TextEditingController(text: '');
+    _bodyFatController = TextEditingController(text: '16.0');
 
     _activityFactor = 1.375;
     _goal = 'cut';
@@ -71,7 +73,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     final weight = double.tryParse(_weightController.text) ?? 75.4;
     final height = double.tryParse(_heightController.text) ?? 178;
     final age = double.tryParse(_ageController.text) ?? 29;
-    final fat = double.tryParse(_bodyFatController.text);
+    final fat = _enableBodyFat ? double.tryParse(_bodyFatController.text) : null;
 
     int bmr;
     if (fat != null && fat > 4) {
@@ -640,105 +642,134 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
           const SizedBox(height: AppSpacing.sm),
 
-          // Body Fat Tile (Optional)
+          // Body Fat Tile with Toggle Switch (Optional)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _enableBodyFat
+                    ? AppColors.primary.withValues(alpha: 0.3)
+                    : Colors.transparent,
+              ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Icon(
-                      Icons.monitor_weight_outlined,
-                      size: 20,
-                      color: AppColors.secondary,
-                    ),
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            const Text(
-                              '% Grasa',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
+                        Icon(
+                          Icons.monitor_weight_outlined,
+                          size: 20,
+                          color: _enableBodyFat
+                              ? AppColors.primary
+                              : AppColors.secondary,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          '% Grasa',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(
+                              alpha: 0.15,
                             ),
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(
-                                  alpha: 0.15,
-                                ),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Text(
-                                'OPCIONAL',
-                                style: TextStyle(
-                                  fontFamily: AppTypography.fontFamily,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primary,
-                                ),
-                              ),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'OPCIONAL',
+                            style: TextStyle(
+                              fontFamily: AppTypography.fontFamily,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
                             ),
-                          ],
+                          ),
                         ),
                       ],
                     ),
+                    Transform.scale(
+                      scale: 0.8,
+                      child: Switch(
+                        value: _enableBodyFat,
+                        onChanged: (val) {
+                          setState(() {
+                            _enableBodyFat = val;
+                          });
+                        },
+                        activeThumbColor: AppColors.primary,
+                        activeTrackColor: AppColors.primary.withValues(
+                          alpha: 0.3,
+                        ),
+                        inactiveTrackColor: AppColors.surfaceHigh,
+                      ),
+                    ),
                   ],
                 ),
-                Row(
-                  children: [
-                    SizedBox(
-                      width: 48,
-                      child: TextField(
-                        controller: _bodyFatController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
+                if (_enableBodyFat) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Especifica tu % estimado:',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
                         ),
-                        textAlign: TextAlign.right,
-                        onChanged: (_) => setState(() {}),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.secondary,
-                        ),
-                        decoration: const InputDecoration(
-                          hintText: '--',
-                          hintStyle: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 16,
-                            fontWeight: FontWeight.normal,
+                      ),
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 54,
+                            child: TextField(
+                              controller: _bodyFatController,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              textAlign: TextAlign.right,
+                              onChanged: (_) => setState(() {}),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
+                              decoration: const InputDecoration(
+                                isDense: true,
+                                contentPadding: EdgeInsets.zero,
+                                border: InputBorder.none,
+                              ),
+                            ),
                           ),
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
-                          border: InputBorder.none,
-                        ),
+                          const SizedBox(width: 4),
+                          const Text(
+                            '%',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Text(
-                      '%',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.secondary,
-                      ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
