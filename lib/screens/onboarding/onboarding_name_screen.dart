@@ -168,7 +168,11 @@ class _OnboardingNameScreenState extends State<OnboardingNameScreen> {
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('ℹ️', style: TextStyle(fontSize: 13)),
+                              const Icon(
+                                Icons.info_outline_rounded,
+                                size: 16,
+                                color: Color(0xFF94A3B8),
+                              ),
                               const SizedBox(width: AppSpacing.xs),
                               Expanded(
                                 child: Text(
@@ -327,7 +331,7 @@ class _OnboardingNameScreenState extends State<OnboardingNameScreen> {
   Widget _buildInputCard() {
     return AnimatedBuilder(
       animation: _focusNode,
-      builder: (context, child) {
+      builder: (context, _) {
         final isFocused = _focusNode.hasFocus;
         return Container(
           padding: const EdgeInsets.all(16),
