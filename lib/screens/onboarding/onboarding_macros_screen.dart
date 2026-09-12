@@ -58,8 +58,7 @@ class OnboardingMacrosScreen extends StatefulWidget {
   State<OnboardingMacrosScreen> createState() => _OnboardingMacrosScreenState();
 }
 
-class _OnboardingMacrosScreenState extends State<OnboardingMacrosScreen>
-    with SingleTickerProviderStateMixin {
+class _OnboardingMacrosScreenState extends State<OnboardingMacrosScreen> {
   int _p = 30; // protein %
   int _c = 45; // carbs %
   int _f = 25; // fat %
@@ -67,28 +66,11 @@ class _OnboardingMacrosScreenState extends State<OnboardingMacrosScreen>
   // -1 = none, 0 = balanced, 1 = high-protein, 2 = custom
   int _activePreset = 0;
 
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
-
   @override
   void initState() {
     super.initState();
     // Determine initial preset match
     _syncPreset();
-
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat(reverse: true);
-    _pulseAnimation = Tween(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
   }
 
   void _syncPreset() {
@@ -638,33 +620,14 @@ class _OnboardingMacrosScreenState extends State<OnboardingMacrosScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                const Text(
-                                  'Personalizado',
-                                  style: TextStyle(
-                                    fontFamily: AppTypography.fontFamily,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                AnimatedBuilder(
-                                  animation: _pulseAnimation,
-                                  builder: (context, _) => Opacity(
-                                    opacity: _pulseAnimation.value,
-                                    child: Container(
-                                      width: 7,
-                                      height: 7,
-                                      decoration: const BoxDecoration(
-                                        color: _kPrimaryColor,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            const Text(
+                              'Personalizado',
+                              style: TextStyle(
+                                fontFamily: AppTypography.fontFamily,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
                             ),
                             const SizedBox(height: 2),
                             const Text(
@@ -680,94 +643,108 @@ class _OnboardingMacrosScreenState extends State<OnboardingMacrosScreen>
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        _isValid
-                            ? Icons.verified_rounded
-                            : Icons.warning_rounded,
-                        size: 12,
-                        color: statusColor,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _isValid
-                            ? '100% calibrado'
-                            : 'Total: $sum% (${diff > 0 ? '+$diff' : '$diff'}%)',
-                        style: TextStyle(
-                          fontFamily: AppTypography.fontFamily,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
+                if (isActive) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _isValid
+                              ? Icons.verified_rounded
+                              : Icons.warning_rounded,
+                          size: 12,
                           color: statusColor,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 4),
+                        Text(
+                          _isValid
+                              ? '100% calibrado'
+                              : 'Total: $sum% (${diff > 0 ? '+$diff' : '$diff'}%)',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: statusColor,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ] else ...[
+                  Text(
+                    '$_p / $_c / $_f',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.outline,
+                    ),
+                  ),
+                ],
               ],
             ),
 
-            const SizedBox(height: 14),
+            if (isActive) ...[
+              const SizedBox(height: 14),
 
-            // Distribution bar
-            _buildDistributionBar(),
+              // Distribution bar
+              _buildDistributionBar(),
 
-            const SizedBox(height: 14),
+              const SizedBox(height: 14),
 
-            // Three macro columns
-            Row(
-              children: [
-                Expanded(
-                  child: _MacroColumn(
-                    label: 'Proteína',
-                    color: _kProteinColor,
-                    value: _p,
-                    totalKcal: widget.totalKcal,
-                    kcalPerGram: 4,
-                    onUp: () => _adjustMacro('p', 1),
-                    onDown: () => _adjustMacro('p', -1),
-                    onInput: (v) => _setMacroFromInput('p', v),
+              // Three macro columns
+              Row(
+                children: [
+                  Expanded(
+                    child: _MacroColumn(
+                      label: 'Proteína',
+                      color: _kProteinColor,
+                      value: _p,
+                      totalKcal: widget.totalKcal,
+                      kcalPerGram: 4,
+                      onUp: () => _adjustMacro('p', 1),
+                      onDown: () => _adjustMacro('p', -1),
+                      onInput: (v) => _setMacroFromInput('p', v),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _MacroColumn(
-                    label: 'Carbos',
-                    color: _kCarbsColor,
-                    value: _c,
-                    totalKcal: widget.totalKcal,
-                    kcalPerGram: 4,
-                    onUp: () => _adjustMacro('c', 1),
-                    onDown: () => _adjustMacro('c', -1),
-                    onInput: (v) => _setMacroFromInput('c', v),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _MacroColumn(
+                      label: 'Carbos',
+                      color: _kCarbsColor,
+                      value: _c,
+                      totalKcal: widget.totalKcal,
+                      kcalPerGram: 4,
+                      onUp: () => _adjustMacro('c', 1),
+                      onDown: () => _adjustMacro('c', -1),
+                      onInput: (v) => _setMacroFromInput('c', v),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _MacroColumn(
-                    label: 'Grasas',
-                    color: _kFatColor,
-                    value: _f,
-                    totalKcal: widget.totalKcal,
-                    kcalPerGram: 9,
-                    onUp: () => _adjustMacro('f', 1),
-                    onDown: () => _adjustMacro('f', -1),
-                    onInput: (v) => _setMacroFromInput('f', v),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _MacroColumn(
+                      label: 'Grasas',
+                      color: _kFatColor,
+                      value: _f,
+                      totalKcal: widget.totalKcal,
+                      kcalPerGram: 9,
+                      onUp: () => _adjustMacro('f', 1),
+                      onDown: () => _adjustMacro('f', -1),
+                      onInput: (v) => _setMacroFromInput('f', v),
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -841,51 +818,17 @@ class _OnboardingMacrosScreenState extends State<OnboardingMacrosScreen>
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'EQUIVALENCIAS METABÓLICAS',
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.8,
-                    color: Colors.white,
-                  ),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: const Text(
+                'Podrás reajustar esta proporción en cualquier momento desde tu Perfil.',
+                style: TextStyle(
+                  fontFamily: AppTypography.fontFamily,
+                  fontSize: 12,
+                  height: 1.4,
+                  color: Color(0xFF94A3B8),
                 ),
-                const SizedBox(height: 4),
-                RichText(
-                  text: const TextSpan(
-                    style: TextStyle(
-                      fontFamily: AppTypography.fontFamily,
-                      fontSize: 12,
-                      height: 1.6,
-                      color: Color(0xFF94A3B8),
-                    ),
-                    children: [
-                      TextSpan(
-                        text: '1 g proteína = 4 kcal',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      TextSpan(text: ' • '),
-                      TextSpan(
-                        text: '1 g carbohidratos = 4 kcal',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      TextSpan(text: ' • '),
-                      TextSpan(
-                        text: '1 g grasa = 9 kcal',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      TextSpan(
-                        text:
-                            '. Podrás reajustar esta proporción en cualquier momento desde tu Perfil.',
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ],

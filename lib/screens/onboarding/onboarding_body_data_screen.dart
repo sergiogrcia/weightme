@@ -910,17 +910,9 @@ class _OnboardingBodyDataScreenState extends State<OnboardingBodyDataScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.surfaceHigh,
+              color: AppColors.surfaceHigh.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: const Color(0xFF6366F1).withValues(alpha: 0.2),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF6366F1).withValues(alpha: 0.15),
-                  blurRadius: 16,
-                ),
-              ],
+              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
             ),
             child: Column(
               children: [
