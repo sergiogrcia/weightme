@@ -612,20 +612,11 @@ class _OnboardingMacrosScreenState extends State<OnboardingMacrosScreen>
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _kSurfaceContainerHigh,
+          color: isActive ? _kSurfaceContainerHigh : _kSurfaceContainer,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: isActive
-              ? [
-                  BoxShadow(
-                    color: _kPrimaryColor.withValues(alpha: 0.15),
-                    blurRadius: 24,
-                    spreadRadius: 0,
-                  ),
-                ]
-              : null,
           border: Border.all(
             color: isActive
-                ? _kPrimaryColor.withValues(alpha: 0.3)
+                ? _kPrimaryColor.withValues(alpha: 0.4)
                 : Colors.transparent,
           ),
         ),
@@ -641,7 +632,7 @@ class _OnboardingMacrosScreenState extends State<OnboardingMacrosScreen>
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _RadioDot(active: isActive, filled: isActive),
+                      _RadioDot(active: isActive),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
@@ -984,33 +975,11 @@ class _OnboardingMacrosScreenState extends State<OnboardingMacrosScreen>
 
 /// Animated Radio-style dot.
 class _RadioDot extends StatelessWidget {
-  const _RadioDot({required this.active, this.filled = false});
+  const _RadioDot({required this.active});
   final bool active;
-  final bool filled;
 
   @override
   Widget build(BuildContext context) {
-    if (filled) {
-      return Container(
-        width: 20,
-        height: 20,
-        decoration: BoxDecoration(
-          color: _kPrimaryColor,
-          shape: BoxShape.circle,
-        ),
-        child: Center(
-          child: Container(
-            width: 9,
-            height: 9,
-            decoration: const BoxDecoration(
-              color: Color(0xFF07006C),
-              shape: BoxShape.circle,
-            ),
-          ),
-        ),
-      );
-    }
-
     return Container(
       width: 20,
       height: 20,
