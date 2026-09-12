@@ -25,14 +25,22 @@ class _OnboardingNameScreenState extends State<OnboardingNameScreen> {
   late final TextEditingController _nameController;
   final FocusNode _focusNode = FocusNode();
 
+  bool get _hasName => _nameController.text.trim().isNotEmpty;
+
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.initialName);
+    _nameController.addListener(_onNameChanged);
+  }
+
+  void _onNameChanged() {
+    setState(() {});
   }
 
   @override
   void dispose() {
+    _nameController.removeListener(_onNameChanged);
     _nameController.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -40,6 +48,7 @@ class _OnboardingNameScreenState extends State<OnboardingNameScreen> {
 
   void _handleContinue() {
     final name = _nameController.text.trim();
+    if (name.isEmpty) return;
     if (widget.onContinue != null) {
       widget.onContinue!(name);
     }
@@ -431,34 +440,38 @@ class _OnboardingNameScreenState extends State<OnboardingNameScreen> {
         SizedBox(
           width: double.infinity,
           height: 52,
-          child: ElevatedButton(
-            onPressed: _handleContinue,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.background,
-              elevation: 0,
-              shadowColor: AppColors.primary.withValues(alpha: 0.25),
-              shape: RoundedRectangleBorder(borderRadius: AppRadius.pill),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Continuar',
-                  style: TextStyle(
-                    fontFamily: AppTypography.fontFamily,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
+          child: AnimatedOpacity(
+            opacity: _hasName ? 1.0 : 0.4,
+            duration: const Duration(milliseconds: 200),
+            child: ElevatedButton(
+              onPressed: _hasName ? _handleContinue : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.background,
+                elevation: 0,
+                shadowColor: AppColors.primary.withValues(alpha: 0.25),
+                shape: RoundedRectangleBorder(borderRadius: AppRadius.pill),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Continuar',
+                    style: TextStyle(
+                      fontFamily: AppTypography.fontFamily,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.background,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 20,
                     color: AppColors.background,
                   ),
-                ),
-                const SizedBox(width: 8),
-                Icon(
-                  Icons.arrow_forward_rounded,
-                  size: 20,
-                  color: AppColors.background,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
